@@ -31,6 +31,7 @@ sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/M
 # 蓝牙 SPP / UART HCI / USB Fallback / BlueZ / RFCOMM 强制使能
 cat << 'EOF' >> .config
 CONFIG_PACKAGE_kmod-bluetooth=y
+CONFIG_PACKAGE_kmod-btqcomsmd=y
 CONFIG_PACKAGE_kmod-hci-uart=y
 CONFIG_PACKAGE_kmod-btusb=y
 CONFIG_PACKAGE_bluez-daemon=y
