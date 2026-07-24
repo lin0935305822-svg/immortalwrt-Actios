@@ -1,0 +1,17 @@
+config dnsmasq
+	option domainneeded '1'
+	option boguspriv '1'
+	option localise_queries '1'
+	option rebind_protection '1'
+	option local '/lan/'
+	option domain 'lan'
+	option expandhosts '1'
+	option cachesize '1000'
+
+# The AP must remain reachable even when the STA cannot join TP-LINK.
+config dhcp 'lan'
+	option interface 'lan'
+	option start '100'
+	option limit '150'
+	option leasetime '12h'
+	option dhcpv4 'server'

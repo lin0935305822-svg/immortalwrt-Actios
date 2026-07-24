@@ -1,0 +1,29 @@
+config wifi-device 'radio1'
+	option type 'mac80211'
+	option path 'platform/soc@0/a204000.remoteproc/remoteproc/remoteproc1/remoteproc1:smd-edge/remoteproc1:smd-edge.WCNSS_CTRL.-1.-1/a204000.remoteproc:smd-edge:wcnss:wifi'
+	# The TP-LINK_7335 2.4 GHz network uses channel 6.  AP and STA share the
+	# only WCNSS radio, so both must remain on this channel for concurrent use.
+	option channel '6'
+	option band '2g'
+	option htmode 'HT20'
+	option disabled '0'
+
+config wifi-iface 'sta'
+	option device 'radio1'
+	option mode 'sta'
+	option network 'wifi_sta'
+	option ssid 'TP-LINK_7335'
+	option key '83163089WU'
+	option encryption 'psk2'
+	option macaddr '34:CE:00:10:9F:03'
+
+# Explicit recovery/debug AP.  It shares radio0 with the STA and is bound to
+# lan, which supplies 192.168.1.1 and DHCP independently of STA status.
+config wifi-iface 'ap'
+	option device 'radio1'
+	option mode 'ap'
+	option network 'lan'
+	option ssid 'ImmortalWrt'
+	option encryption 'none'
+	# STA-only test: this WCNSS driver may not support AP and STA concurrently.
+	option disabled '1'

@@ -1,0 +1,44 @@
+#!/bin/sh
+
+# 1. 确保 usb_rndis_gadget 和 blue_led_fix 服务在 init 链中启用
+if [ -f /etc/init.d/usb_rndis_gadget ]; then
+    /etc/init.d/usb_rndis_gadget enable >/dev/null 2>&1 || true
+fi
+# The legacy g_ether implementation competes with the ConfigFS gadget for
+# the only USB device controller.  Keep the wrapper disabled at boot.
+if [ -f /etc/init.d/usb_rndis ]; then
+    /etc/init.d/usb_rndis disable >/dev/null 2>&1 || true
+fi
+if [ -f /etc/init.d/blue_led_fix ]; then
+    /etc/init.d/blue_led_fix enable >/dev/null 2>&1 || true
+fi
+
+# blue_timer_guard is an older second writer for the same LED.
+if [ -f /etc/init.d/blue_timer_guard ]; then
+    /etc/init.d/blue_timer_guard disable >/dev/null 2>&1 || true
+fi
+
+# 2. 清理过时的 Shell 轮询脚本残留
+rm -f /usr/bin/modem_led_status.sh /etc/init.d/modem_led_status /etc/modem_led_status.conf /etc/init.d/blue_timer_guard /etc/rc.d/S??modem_led_status /etc/rc.d/S??blue_timer_guard 2>/dev/null || true
+
+# 3. 确保 OpenWrt 原生 /etc/init.d/led 服务启用 (START=96)
+if [ -f /etc/init.d/led ]; then
+    /etc/init.d/led enable >/dev/null 2>&1 || true
+fi
+
+# 4. 提交原生 system UCI 配置
+if command -v uci >/dev/null 2>&1 && [ -f /etc/config/system ]; then
+    uci commit system >/dev/null 2>&1 || true
+fi
+
+# 5. 确保蓝牙 SPP 与 A30M RFCOMM 绑定服务启用
+chmod 0755 /usr/bin/bluetooth_spp_manager.sh /usr/bin/rfcomm_a30m_bind.sh /etc/init.d/bluetooth_spp_service /etc/init.d/rfcomm_a30m 2>/dev/null || true
+if [ -f /etc/init.d/bluetooth_spp_service ]; then
+    /etc/init.d/bluetooth_spp_service enable >/dev/null 2>&1 || true
+fi
+if [ -f /etc/init.d/rfcomm_a30m ]; then
+    /etc/init.d/rfcomm_a30m enable >/dev/null 2>&1 || true
+fi
+
+exit 0
+

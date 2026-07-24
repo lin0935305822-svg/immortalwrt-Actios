@@ -1,0 +1,14 @@
+#!/bin/sh /etc/rc.common
+
+START=10
+STOP=10
+
+start() {
+    # Compatibility entry point.  ConfigFS is the only supported gadget
+    # implementation; loading g_ether here would compete for the sole UDC.
+    /etc/init.d/usb_rndis_gadget start
+}
+
+stop() {
+    /etc/init.d/usb_rndis_gadget stop
+}

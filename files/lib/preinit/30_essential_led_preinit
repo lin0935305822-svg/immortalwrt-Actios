@@ -1,0 +1,107 @@
+#!/bin/sh
+
+LED_PREINIT_PID_FILE="/tmp/svci_led_preinit.pid"
+LED_PREINIT_TIMEOUT_SEC=300
+
+to_lower() {
+    printf '%s' "$1" | tr 'A-Z' 'a-z'
+}
+
+is_ignored_led() {
+    case "$1" in
+        sim:sel|sim:sel2|sim:en|sim:en2)
+            return 0
+            ;;
+    esac
+
+    return 1
+}
+
+match_alias_list() {
+    name="$1"
+    aliases="$2"
+
+    [ -n "$aliases" ] || return 1
+
+    old_ifs="$IFS"
+    IFS='|'
+    set -- $aliases
+    IFS="$old_ifs"
+
+    lower_name="$(to_lower "$name")"
+    for alias in "$@"; do
+        alias_lower="$(to_lower "$alias")"
+        [ -n "$alias_lower" ] || continue
+        case "$lower_name" in
+            *"$alias_lower"*)
+                return 0
+                ;;
+        esac
+    done
+
+    return 1
+}
+
+pick_blue_led() {
+    # The device-tree node is stable even when the kernel class name changes.
+    for led in /sys/class/leds/*; do
+        [ -d "$led" ] || continue
+        name="${led##*/}"
+        is_ignored_led "$name" && continue
+        node_name="$(tr -d '\000' < "$led/device/of_node/name" 2>/dev/null || true)"
+        if [ "$node_name" = "led-b" ]; then
+            printf '%s\n' "$led"
+            return 0
+        fi
+    done
+
+    for name in blue:wan led-b blue; do
+        [ -d "/sys/class/leds/$name" ] && printf '%s\n' "/sys/class/leds/$name" && return 0
+    done
+
+    return 1
+}
+
+set_blue_timer() {
+    led="$1"
+    [ -n "$led" ] || return 1
+    [ -d "$led" ] || return 1
+
+    # Do not leave a user-space loop writing brightness after preinit.  That
+    # races the normal LED service and makes the physical cadence ambiguous.
+    echo timer > "$led/trigger" 2>/dev/null || return 1
+    [ -w "$led/delay_on" ] && echo 1000 > "$led/delay_on" 2>/dev/null || true
+    [ -w "$led/delay_off" ] && echo 1000 > "$led/delay_off" 2>/dev/null || true
+}
+
+start_preinit_led_worker() {
+    if [ -f "$LED_PREINIT_PID_FILE" ]; then
+        pid="$(cat "$LED_PREINIT_PID_FILE" 2>/dev/null || true)"
+        [ -n "$pid" ] && [ -d "/proc/$pid" ] && return 0
+        rm -f "$LED_PREINIT_PID_FILE"
+    fi
+
+    (
+        trap 'rm -f "$LED_PREINIT_PID_FILE"; exit 0' EXIT HUP INT TERM
+
+        waited=0
+        while [ ! -d /sys/class/leds ]; do
+            [ "$waited" -ge "$LED_PREINIT_TIMEOUT_SEC" ] && exit 0
+            sleep 1
+            waited=$((waited + 1))
+        done
+
+        blue_led="$(pick_blue_led)"
+        [ -n "$blue_led" ] || exit 0
+
+        set_blue_timer "$blue_led"
+    ) >/dev/null 2>&1 &
+
+    echo $! > "$LED_PREINIT_PID_FILE"
+}
+
+do_essential_led_preinit() {
+    start_preinit_led_worker
+}
+
+boot_hook_add preinit_main do_essential_led_preinit

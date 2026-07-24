@@ -1,0 +1,86 @@
+#!/bin/sh /etc/rc.common
+
+START=10
+STOP=10
+
+GADGET_DIR="/sys/kernel/config/usb_gadget/g1"
+
+wait_for_udc() {
+    tries=0
+    while [ "$tries" -lt 20 ]; do
+        for udc_path in /sys/class/udc/*; do
+            [ -e "$udc_path" ] || continue
+            basename "$udc_path"
+            return 0
+        done
+        tries=$((tries + 1))
+        sleep 1
+    done
+    return 1
+}
+
+configure_os_descriptors() {
+    # Windows selects the RNDIS driver from these Microsoft OS descriptors.
+    mkdir -p "$GADGET_DIR/os_desc" 2>/dev/null || return 0
+    echo 1 > "$GADGET_DIR/os_desc/use" 2>/dev/null || true
+    echo 0xcd > "$GADGET_DIR/os_desc/b_vendor_code" 2>/dev/null || true
+    echo MSFT100 > "$GADGET_DIR/os_desc/qw_sign" 2>/dev/null || true
+    echo RNDIS > "$GADGET_DIR/functions/rndis.usb0/os_desc/interface.rndis/compatible_id" 2>/dev/null || true
+    echo 5162001 > "$GADGET_DIR/functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id" 2>/dev/null || true
+    [ -e "$GADGET_DIR/os_desc/c.1" ] || ln -s "$GADGET_DIR/configs/c.1" "$GADGET_DIR/os_desc/c.1" 2>/dev/null || true
+}
+
+start() {
+    # ADB can claim the only device controller before ConfigFS is ready.
+    /etc/init.d/adbd stop >/dev/null 2>&1 || true
+    killall adbd >/dev/null 2>&1 || true
+    rmmod g_ether >/dev/null 2>&1 || true
+
+    modprobe libcomposite 2>/dev/null || true
+    modprobe u_ether 2>/dev/null || true
+    modprobe usb_f_rndis 2>/dev/null || true
+
+    [ -d /sys/kernel/config ] || mkdir -p /sys/kernel/config
+    mountpoint -q /sys/kernel/config || mount -t configfs none /sys/kernel/config 2>/dev/null || true
+    [ -d /sys/kernel/config/usb_gadget ] || {
+        logger -t usb_rndis_gadget "ConfigFS USB gadget support is unavailable"
+        return 1
+    }
+
+    mkdir -p "$GADGET_DIR"
+    echo "" > "$GADGET_DIR/UDC" 2>/dev/null || true
+    echo 0x05c6 > "$GADGET_DIR/idVendor" 2>/dev/null || true
+    echo 0x90b8 > "$GADGET_DIR/idProduct" 2>/dev/null || true
+
+    mkdir -p "$GADGET_DIR/strings/0x409"
+    echo Qualcomm > "$GADGET_DIR/strings/0x409/manufacturer" 2>/dev/null || true
+    echo "410 USB RNDIS" > "$GADGET_DIR/strings/0x409/product" 2>/dev/null || true
+    echo 410RNDIS001 > "$GADGET_DIR/strings/0x409/serialnumber" 2>/dev/null || true
+
+    mkdir -p "$GADGET_DIR/configs/c.1/strings/0x409"
+    echo RNDIS > "$GADGET_DIR/configs/c.1/strings/0x409/configuration" 2>/dev/null || true
+    echo 250 > "$GADGET_DIR/configs/c.1/MaxPower" 2>/dev/null || true
+    mkdir -p "$GADGET_DIR/functions/rndis.usb0"
+    echo 02:41:00:10:9f:01 > "$GADGET_DIR/functions/rndis.usb0/host_addr" 2>/dev/null || true
+    echo 02:41:00:10:9f:02 > "$GADGET_DIR/functions/rndis.usb0/dev_addr" 2>/dev/null || true
+    [ -e "$GADGET_DIR/configs/c.1/rndis.usb0" ] || ln -s "$GADGET_DIR/functions/rndis.usb0" "$GADGET_DIR/configs/c.1/rndis.usb0" 2>/dev/null || true
+    configure_os_descriptors
+
+    udc="$(wait_for_udc)" || {
+        logger -t usb_rndis_gadget "no UDC appeared within 20 seconds"
+        return 1
+    }
+    echo "$udc" > "$GADGET_DIR/UDC" || return 1
+
+    # netifd owns 192.168.41.2/24 through the usb_rndis UCI interface.
+    if ! ifup usb_rndis; then
+        logger -t usb_rndis_gadget "failed to bring up usb_rndis"
+        return 1
+    fi
+    logger -t usb_rndis_gadget "RNDIS gadget bound to UDC $udc"
+}
+
+stop() {
+    ifdown usb_rndis >/dev/null 2>&1 || logger -t usb_rndis_gadget "failed to bring down usb_rndis"
+    [ -e "$GADGET_DIR/UDC" ] && echo "" > "$GADGET_DIR/UDC" 2>/dev/null || true
+}

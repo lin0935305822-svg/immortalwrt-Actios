@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# 首次开机自动确保 Wi-Fi STA 配置生效
+if [ -f /etc/config/wireless ]; then
+    uci set wireless.radio1.disabled='0' 2>/dev/null || true
+    uci set wireless.sta.disabled='0' 2>/dev/null || true
+    uci set wireless.ap.disabled='1' 2>/dev/null || true
+    uci set wireless.sta.macaddr='34:CE:00:10:9F:03' 2>/dev/null || true
+    uci commit wireless 2>/dev/null || true
+fi
+
+exit 0

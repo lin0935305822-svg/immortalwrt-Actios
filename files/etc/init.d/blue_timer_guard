@@ -1,0 +1,14 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+
+start() {
+    led="/sys/class/leds/led-b"
+
+    [ -d "$led" ] || return 0
+
+    # Apply after the stock S96led service has restored any persisted UCI state.
+    echo timer > "$led/trigger" 2>/dev/null || return 0
+    echo 1000 > "$led/delay_on" 2>/dev/null || true
+    echo 1000 > "$led/delay_off" 2>/dev/null || true
+}

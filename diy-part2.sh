@@ -27,3 +27,17 @@ sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/M
 # git clone https://github.com/gSpotx2f/luci-app-cpu-status-mini package/luci-app-cpu-status-mini
 # git clone https://github.com/lkiuyu/luci-app-temp-status package/luci-app-temp-status
 # git clone https://github.com/lkiuyu/DbusSmsForwardCPlus package/DbusSmsForwardCPlus
+
+# 蓝牙 SPP / UART HCI / USB Fallback / BlueZ / RFCOMM 强制使能
+cat << 'EOF' >> .config
+CONFIG_PACKAGE_kmod-bluetooth=y
+CONFIG_PACKAGE_kmod-bluetooth-rfcomm=y
+CONFIG_PACKAGE_kmod-bluetooth-hci-uart=y
+CONFIG_PACKAGE_kmod-bluetooth-hci-h4=y
+CONFIG_PACKAGE_kmod-bluetooth-hci-usb=y
+CONFIG_PACKAGE_bluez-daemon=y
+CONFIG_PACKAGE_bluez-utils=y
+CONFIG_PACKAGE_bluez-libs=y
+CONFIG_PACKAGE_dbus=y
+EOF
+

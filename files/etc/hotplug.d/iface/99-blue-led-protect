@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Interface events are diagnostic only. LED ownership stays with preinit,
+# /etc/init.d/led and blue_led_fix so hotplug cannot alter the cadence.
+for node in blue:wan led-b blue; do
+    if [ -d "/sys/class/leds/$node" ]; then
+        logger -t led_status "iface=${INTERFACE:-unknown} action=${ACTION:-unknown} blue=$node trigger=$(cat "/sys/class/leds/$node/trigger" 2>/dev/null) delay_on=$(cat "/sys/class/leds/$node/delay_on" 2>/dev/null) delay_off=$(cat "/sys/class/leds/$node/delay_off" 2>/dev/null) red_trigger=$(cat /sys/class/leds/red:power/trigger 2>/dev/null)"
+        break
+    fi
+done

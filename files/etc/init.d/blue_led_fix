@@ -1,0 +1,31 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+
+start() {
+    led=""
+
+    # Locate the physical blue LED by its DT node, not its kernel-assigned
+    # class name.  gpio-leds may expose that node as blue:wan or led-b.
+    for candidate in /sys/class/leds/*; do
+        [ -d "$candidate" ] || continue
+        node_name="$(tr -d '\000' < "$candidate/device/of_node/name" 2>/dev/null || true)"
+        if [ "$node_name" = "led-b" ]; then
+            led="$candidate"
+            break
+        fi
+    done
+
+    [ -n "$led" ] || {
+        for node in blue:wan led-b blue; do
+            [ -d "/sys/class/leds/$node" ] && led="/sys/class/leds/$node" && break
+        done
+    }
+
+    [ -n "$led" ] || return 0
+
+    echo timer > "$led/trigger" 2>/dev/null || return 0
+    [ -w "$led/delay_on" ] && echo 1000 > "$led/delay_on" 2>/dev/null || true
+    [ -w "$led/delay_off" ] && echo 1000 > "$led/delay_off" 2>/dev/null || true
+    logger -t led_status "blue=${led##*/} trigger=$(cat "$led/trigger" 2>/dev/null) delay_on=$(cat "$led/delay_on" 2>/dev/null) delay_off=$(cat "$led/delay_off" 2>/dev/null)"
+}

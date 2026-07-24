@@ -1,0 +1,73 @@
+#!/bin/sh
+
+find_led() {
+    for name in "$@"; do
+        [ -d "/sys/class/leds/$name" ] && printf '%s\n' "/sys/class/leds/$name" && return 0
+    done
+    return 1
+}
+
+set_timer() {
+    [ -n "$1" ] || return 0
+    echo timer > "$1/trigger" 2>/dev/null || return 0
+    echo "$2" > "$1/delay_on" 2>/dev/null || true
+    echo "$3" > "$1/delay_off" 2>/dev/null || true
+}
+
+set_off() {
+    [ -n "$1" ] || return 0
+    echo none > "$1/trigger" 2>/dev/null || true
+    echo 0 > "$1/brightness" 2>/dev/null || true
+}
+
+wifi_bytes() {
+    total=0
+    for stat in /sys/class/net/wlan*/statistics/rx_bytes /sys/class/net/wlan*/statistics/tx_bytes; do
+        [ -r "$stat" ] || continue
+        value="$(cat "$stat" 2>/dev/null)"
+        case "$value" in *[!0-9]*|'') continue ;; esac
+        total=$((total + value))
+    done
+    printf '%s\n' "$total"
+}
+
+wifi_connected() {
+    # The upstream STA is the red LED's primary connection state.
+    ubus call network.interface.wifi_sta status 2>/dev/null | grep -q '"up":true' && return 0
+    command -v iw >/dev/null 2>&1 || return 1
+    for iface in $(iw dev 2>/dev/null | awk '$1 == "Interface" { print $2 }'); do
+        iw dev "$iface" link 2>/dev/null | grep -q '^Connected to ' && return 0
+        iw dev "$iface" station dump 2>/dev/null | grep -q '^Station ' && return 0
+    done
+    return 1
+}
+
+blue="$(find_led blue:wan led-b blue)"
+red="$(find_led red:power led-r red)"
+previous_bytes="$(wifi_bytes)"
+blue_state=''
+red_state=''
+
+while :; do
+    if [ "$(cat /tmp/obdclaw_led_mode 2>/dev/null)" = 'fault' ]; then
+        [ "$blue_state" = 'off' ] || { set_off "$blue"; blue_state='off'; }
+        [ "$red_state" = 'fault' ] || { set_timer "$red" 120 120; red_state='fault'; }
+        sleep 1
+        continue
+    fi
+
+    if wifi_connected; then
+        [ "$red_state" = 'connected' ] || { set_timer "$red" 700 700; red_state='connected'; logger -t led_status 'red=slow wifi=connected'; }
+    else
+        [ "$red_state" = 'disconnected' ] || { set_timer "$red" 120 120; red_state='disconnected'; logger -t led_status 'red=fast wifi=disconnected'; }
+    fi
+
+    current_bytes="$(wifi_bytes)"
+    if [ "$current_bytes" != "$previous_bytes" ]; then
+        [ "$blue_state" = 'active' ] || { set_timer "$blue" 120 120; blue_state='active'; logger -t led_status 'blue=active wifi-traffic=present'; }
+    else
+        [ "$blue_state" = 'idle' ] || { set_timer "$blue" 1000 1000; blue_state='idle'; logger -t led_status 'blue=idle wifi-traffic=absent'; }
+    fi
+    previous_bytes="$current_bytes"
+    sleep 1
+done

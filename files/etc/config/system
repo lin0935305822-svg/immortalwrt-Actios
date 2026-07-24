@@ -1,0 +1,24 @@
+config system
+	option hostname 'ImmortalWrt'
+	option timezone 'CST-8'
+	option zonename 'Asia/Shanghai'
+
+config led 'led_blue'
+	option name 'System Status (Blue WAN)'
+	option sysfs 'blue:wan'
+	option trigger 'timer'
+	option delayon '1000'
+	option delayoff '1000'
+
+config led 'led_red'
+	option name 'Reserved Status / Fault (Red Power)'
+	option sysfs 'red:power'
+	option trigger 'none'
+	option default '0'
+
+config led 'led_green'
+	option name 'DoIP Ethernet Link (Green WLAN)'
+	option sysfs 'green:wlan'
+	option trigger 'netdev'
+	option dev 'eth0'
+	option mode 'link rx tx'
