@@ -31,9 +31,13 @@ define KernelPackage/btqcomsmd
   SUBMENU:=Bluetooth Support
   TITLE:=Qualcomm WCNSS SMD Bluetooth support
   DEPENDS:=+kmod-bluetooth
-  KCONFIG:=CONFIG_BT_QCOMSMD
-  FILES:=$(LINUX_DIR)/drivers/bluetooth/btqcomsmd.ko
-  AUTOLOAD:=$(call AutoProbe,btqcomsmd)
+  KCONFIG:= \
+	CONFIG_QCOM_WCNSS_CTRL \
+	CONFIG_BT_QCOMSMD
+  FILES:= \
+	$(LINUX_DIR)/drivers/soc/qcom/wcnss_ctrl.ko \
+	$(LINUX_DIR)/drivers/bluetooth/btqcomsmd.ko
+  AUTOLOAD:=$(call AutoProbe,wcnss_ctrl btqcomsmd)
 endef
 
 define KernelPackage/btqcomsmd/description
