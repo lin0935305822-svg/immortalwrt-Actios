@@ -25,4 +25,8 @@ define KernelPackage/btqcomsmd/description
  Kernel support for Qualcomm WCNSS Bluetooth connected through SMD.
 endef
 
+# The modules are built by the kernel tree; this package only installs them.
+define Build/Compile
+endef
+
 $(eval $(call KernelPackage,btqcomsmd))
