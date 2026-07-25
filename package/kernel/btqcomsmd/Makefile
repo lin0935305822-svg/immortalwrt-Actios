@@ -12,11 +12,13 @@ define KernelPackage/btqcomsmd
   DEPENDS:=+kmod-bluetooth
   KCONFIG:= \
 	CONFIG_QCOM_WCNSS_CTRL \
+	CONFIG_BT_QCA \
 	CONFIG_BT_QCOMSMD
   FILES:= \
 	$(LINUX_DIR)/drivers/soc/qcom/wcnss_ctrl.ko \
+	$(LINUX_DIR)/drivers/bluetooth/btqca.ko \
 	$(LINUX_DIR)/drivers/bluetooth/btqcomsmd.ko
-  AUTOLOAD:=$(call AutoProbe,wcnss_ctrl btqcomsmd)
+  AUTOLOAD:=$(call AutoProbe,wcnss_ctrl btqca btqcomsmd)
 endef
 
 define KernelPackage/btqcomsmd/description
