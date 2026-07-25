@@ -4,7 +4,7 @@
 LOG_TAG="rfcomm_a30m"
 
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$LOG_TAG] $*" | tee -a /tmp/rfcomm_a30m.log
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$LOG_TAG] $*" | tee -a /tmp/rfcomm_a30m.log >&2
 }
 
 get_config() {

@@ -17,8 +17,13 @@ fi
 
 if ! pgrep -x bluetoothd >/dev/null; then
     log "Starting bluetoothd daemon..."
-    /usr/libexec/bluetooth/bluetoothd --compat --noplugin=avrcp,network &
-    sleep 2
+    bluetoothd_bin="$(command -v bluetoothd 2>/dev/null || true)"
+    if [ -n "$bluetoothd_bin" ]; then
+        "$bluetoothd_bin" --compat --noplugin=avrcp,network &
+        sleep 2
+    else
+        log "bluetoothd executable is not installed."
+    fi
 fi
 
 # 2. 板载 UART HCI 与 USB 适配器回退拉起流程
