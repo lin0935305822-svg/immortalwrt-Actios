@@ -14,6 +14,35 @@ echo 'src-git smpackage https://github.com/kenzok8/small-package' >> feeds.conf.
 # 添加第三方源，iStore 应用商店，编译时包名输入 luci-app-store
 echo 'src-git store https://github.com/linkease/istore.git;main' >> feeds.conf.default
 
+# The MSM8916 UFI003 device tree exposes board Bluetooth as qcom,wcnss-bt.
+# Upstream does not package btqcomsmd.ko, so create the package before
+# feeds/configuration are processed.
+mkdir -p package/kernel/btqcomsmd
+cat > package/kernel/btqcomsmd/Makefile << 'EOF'
+include $(TOPDIR)/rules.mk
+include $(INCLUDE_DIR)/kernel.mk
+
+PKG_NAME:=kmod-btqcomsmd
+PKG_RELEASE:=1
+
+include $(INCLUDE_DIR)/package.mk
+
+define KernelPackage/btqcomsmd
+  SUBMENU:=Bluetooth Support
+  TITLE:=Qualcomm WCNSS SMD Bluetooth support
+  DEPENDS:=+kmod-bluetooth
+  KCONFIG:=CONFIG_BT_QCOMSMD
+  FILES:=$(LINUX_DIR)/drivers/bluetooth/btqcomsmd.ko
+  AUTOLOAD:=$(call AutoProbe,btqcomsmd)
+endef
+
+define KernelPackage/btqcomsmd/description
+ Kernel support for Qualcomm WCNSS Bluetooth connected through SMD.
+endef
+
+$(eval $(call KernelPackage,btqcomsmd))
+EOF
+
 
 # OpenClash代理
 # git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
