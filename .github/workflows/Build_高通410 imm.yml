@@ -257,10 +257,9 @@ jobs:
         grep -F 'CONFIG_QCOM_WCNSS_CTRL' package/kernel/btqcomsmd/Makefile
         grep -F 'CONFIG_BT_QCA' package/kernel/btqcomsmd/Makefile
         grep -F 'CONFIG_BT_QCOMSMD' package/kernel/btqcomsmd/Makefile
-        grep -F 'drivers/soc/qcom/wcnss_ctrl.ko' package/kernel/btqcomsmd/Makefile
         grep -F 'drivers/bluetooth/btqca.ko' package/kernel/btqcomsmd/Makefile
         grep -F 'drivers/bluetooth/btqcomsmd.ko' package/kernel/btqcomsmd/Makefile
-        grep -F 'AutoProbe,wcnss_ctrl btqca btqcomsmd' package/kernel/btqcomsmd/Makefile
+        grep -F 'AutoProbe,btqca btqcomsmd' package/kernel/btqcomsmd/Makefile
         grep -Fx 'define Build/Compile' package/kernel/btqcomsmd/Makefile
        
     - name: Download package

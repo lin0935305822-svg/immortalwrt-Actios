@@ -36,10 +36,9 @@ define KernelPackage/btqcomsmd
 	CONFIG_BT_QCA \
 	CONFIG_BT_QCOMSMD
   FILES:= \
-	$(LINUX_DIR)/drivers/soc/qcom/wcnss_ctrl.ko \
 	$(LINUX_DIR)/drivers/bluetooth/btqca.ko \
 	$(LINUX_DIR)/drivers/bluetooth/btqcomsmd.ko
-  AUTOLOAD:=$(call AutoProbe,wcnss_ctrl btqca btqcomsmd)
+  AUTOLOAD:=$(call AutoProbe,btqca btqcomsmd)
 endef
 
 define KernelPackage/btqcomsmd/description
