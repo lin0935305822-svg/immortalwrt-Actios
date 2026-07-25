@@ -247,6 +247,20 @@ jobs:
       run: |
        cd openwrt
        make defconfig
+
+    - name: Verify UFI003 WCNSS Bluetooth import
+      if: ${{ inputs.profile == 'ufi003' }}
+      run: |
+        cd openwrt
+        test -f package/kernel/btqcomsmd/Makefile
+        grep -Fx 'CONFIG_PACKAGE_kmod-btqcomsmd=y' .config
+        grep -Fx 'CONFIG_QCOM_WCNSS_CTRL' package/kernel/btqcomsmd/Makefile
+        grep -Fx 'CONFIG_BT_QCA' package/kernel/btqcomsmd/Makefile
+        grep -Fx 'CONFIG_BT_QCOMSMD' package/kernel/btqcomsmd/Makefile
+        grep -F 'drivers/soc/qcom/wcnss_ctrl.ko' package/kernel/btqcomsmd/Makefile
+        grep -F 'drivers/bluetooth/btqca.ko' package/kernel/btqcomsmd/Makefile
+        grep -F 'drivers/bluetooth/btqcomsmd.ko' package/kernel/btqcomsmd/Makefile
+        grep -F 'AutoProbe,wcnss_ctrl btqca btqcomsmd' package/kernel/btqcomsmd/Makefile
        
     - name: Download package
       id: package
