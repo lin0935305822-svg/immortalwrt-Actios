@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# This Wi-Fi-only OBDclaw profile must not start cellular retry services.
+for service in modemmanager qmi_auto_activate qmi-modem-410-init; do
+    if [ -x "/etc/init.d/$service" ]; then
+        "/etc/init.d/$service" stop >/dev/null 2>&1 || true
+        "/etc/init.d/$service" disable >/dev/null 2>&1 || true
+    fi
+done
+
+killall qmicli qmi_auto_activate qmi-modem-410-init ModemManager 2>/dev/null || true
+exit 0
