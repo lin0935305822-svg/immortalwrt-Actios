@@ -1,6 +1,9 @@
 config bluetooth_a30m 'settings'
 	option enabled '1'
-	option target_mac '' # 留空时由脚本自动扫描并配对匹配 SSID 包含 'A30M' 的设备，例如 'AA:BB:CC:11:22:33'
-	option pin '1234'
-	option rfcomm_dev '0' # 对应 /dev/rfcomm0
+	option target_mac 'C4:65:4D:9D:09:34'
+	option rfcomm_dev '0'
+# The RFCOMM service channel is discovered from the peer's SPP SDP record
+# before every connection attempt.
+	option scan_transport 'bredr'
 	option scan_interval '10'
+	option coexistence_test '0'

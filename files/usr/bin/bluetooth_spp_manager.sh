@@ -3,6 +3,7 @@
 # Supporting UART HCI with USB Bluetooth Adapter Fallback
 
 LOG_TAG="bt_spp_manager"
+LOCAL_BT_NAME="OBDclaw-410"
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$LOG_TAG] $*" | tee -a /tmp/bluetooth_spp.log
@@ -71,8 +72,11 @@ while true; do
     if hciconfig hci0 >/dev/null 2>&1; then
         # 激活 hci0 并设置为可搜索/配对 (PISCAN)
         hciconfig hci0 up 2>/dev/null || true
+        hciconfig hci0 name "$LOCAL_BT_NAME" 2>/dev/null || true
         hciconfig hci0 piscan 2>/dev/null || true
-        hciconfig hci0 auth encrypt 2>/dev/null || true
+        # CloudDiag's known-good path creates an insecure RFCOMM socket. Do
+        # not force adapter-wide authentication or encryption before it.
+        hciconfig hci0 noauth noencrypt 2>/dev/null || true
 
         # 注册 Classic Bluetooth SPP (Serial Port Profile)
         if ! sdptool browse local 2>/dev/null | grep -i "Serial Port" >/dev/null; then

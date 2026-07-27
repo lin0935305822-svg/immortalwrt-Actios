@@ -46,7 +46,10 @@ define KernelPackage/btqcomsmd/description
 endef
 
 # The modules are built by the kernel tree; this package only installs them.
+# Keep this explicit no-op: an empty definition falls back to the default
+# package build and attempts make in an empty PKG_BUILD_DIR.
 define Build/Compile
+	true
 endef
 
 $(eval $(call KernelPackage,btqcomsmd))

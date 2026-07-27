@@ -25,7 +25,10 @@ define KernelPackage/btqcomsmd/description
 endef
 
 # The modules are built by the kernel tree; this package only installs them.
+# A blank definition falls back to OpenWrt's default package build and invokes
+# make in an empty PKG_BUILD_DIR, which made the firmware build fail.
 define Build/Compile
+	true
 endef
 
 $(eval $(call KernelPackage,btqcomsmd))

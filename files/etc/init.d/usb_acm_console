@@ -1,0 +1,52 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=10
+
+GADGET_DIR="/sys/kernel/config/usb_gadget/svci_console"
+
+start() {
+    /etc/init.d/usb_rndis_gadget stop >/dev/null 2>&1 || true
+    modprobe libcomposite 2>/dev/null || true
+    modprobe u_serial 2>/dev/null || true
+    modprobe usb_f_acm 2>/dev/null || true
+
+    [ -d /sys/kernel/config ] || mkdir -p /sys/kernel/config
+    mountpoint -q /sys/kernel/config || mount -t configfs none /sys/kernel/config 2>/dev/null || true
+    [ -d /sys/kernel/config/usb_gadget ] || return 1
+
+    mkdir -p "$GADGET_DIR"
+    echo "" > "$GADGET_DIR/UDC" 2>/dev/null || true
+    # Do not use Qualcomm's diagnostic VID/PID here: Windows binds those IDs
+    # to qcusbser instead of its standard CDC ACM console driver.
+    echo 0x1d6b > "$GADGET_DIR/idVendor"
+    echo 0x0104 > "$GADGET_DIR/idProduct"
+    mkdir -p "$GADGET_DIR/strings/0x409" "$GADGET_DIR/configs/c.1/strings/0x409"
+    echo Qualcomm > "$GADGET_DIR/strings/0x409/manufacturer"
+    echo "410 Linux Console" > "$GADGET_DIR/strings/0x409/product"
+    echo 410CONSOLE001 > "$GADGET_DIR/strings/0x409/serialnumber"
+    echo "CDC ACM Console" > "$GADGET_DIR/configs/c.1/strings/0x409/configuration"
+    echo 250 > "$GADGET_DIR/configs/c.1/MaxPower"
+    mkdir -p "$GADGET_DIR/functions/acm.GS0"
+    [ -e "$GADGET_DIR/configs/c.1/acm.GS0" ] || ln -s "$GADGET_DIR/functions/acm.GS0" "$GADGET_DIR/configs/c.1/acm.GS0"
+
+    for udc in /sys/class/udc/*; do
+        [ -e "$udc" ] || continue
+        if basename "$udc" > "$GADGET_DIR/UDC"; then
+            # f_acm creates this endpoint asynchronously after UDC bind.
+            tries=0
+            while [ "$tries" -lt 20 ]; do
+                [ -c /dev/ttyGS0 ] && return 0
+                tries=$((tries + 1))
+                sleep 1
+            done
+            logger -t usb_acm_console "ttyGS0 was not created after UDC bind"
+            return 1
+        fi
+    done
+    return 1
+}
+
+stop() {
+    [ -e "$GADGET_DIR/UDC" ] && echo "" > "$GADGET_DIR/UDC" 2>/dev/null || true
+}

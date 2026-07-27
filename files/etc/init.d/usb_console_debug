@@ -1,0 +1,13 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=10
+
+start() {
+    [ -c /dev/ttyGS0 ] || return 1
+    /usr/bin/usb_console_debug.sh >/dev/null 2>&1 &
+}
+
+stop() {
+    killall usb_console_debug.sh 2>/dev/null || true
+}

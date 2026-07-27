@@ -1,0 +1,11 @@
+#!/bin/sh /etc/rc.common
+
+START=97
+USE_PROCD=1
+
+start_service() {
+    procd_open_instance 'obdclaw_bt_coex_test'
+    procd_set_param command /bin/sh /usr/bin/obdclaw_bt_coex_test.sh
+    procd_set_param respawn 0 0 0
+    procd_close_instance
+}
