@@ -160,3 +160,8 @@
 ## License
 
 [MIT](https://github.com/P3TERX/Actions-OpenWrt/blob/main/LICENSE) © [**P3TERX**](https://p3terx.com)
+# SVCI Release Procedure
+
+For the authoritative UFI003 build, TP-Link network, GitHub Actions, artifact,
+and release process, read
+[docs/SVCI_410_BUILD_AND_RELEASE.md](./docs/SVCI_410_BUILD_AND_RELEASE.md).
