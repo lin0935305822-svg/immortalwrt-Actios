@@ -107,6 +107,16 @@ The production profile intentionally disables Dropbear, uhttpd, and Android
 adb. Do not reintroduce network shell, web script upload, or unauthenticated
 maintenance paths as a release shortcut.
 
+## Verified Core Freeze
+
+Once a core path has passed physical acceptance, it is frozen by default.
+Core paths are boot/rootfs flashing, protected partition exclusions, Wi-Fi STA,
+LED status, CDC ACM diagnostics, WCNSS Bluetooth, and A30M RFCOMM pairing. A
+change requires a concrete defect or requirement change, documented affected
+invariants, focused source/image checks, and a new physical acceptance record.
+Do not replace a proven path with a cleanup, refactor, generic fallback, or
+unverified alternative.
+
 ## LED Contract
 
 The red LED is the communication-status indicator, not a normally-off fault

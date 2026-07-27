@@ -20,3 +20,16 @@ They are release requirements, not suggestions.
    `fsg`. Normal firmware flashing writes only `boot` and `rootfs`.
 7. Do not treat a successful compiler exit as a release result. The release
    commit, Actions run, artifact hashes, and acceptance report must match.
+
+## Verified Core Freeze
+
+Default to no change for a component that has passed physical acceptance.
+Core components include the boot/rootfs flash procedure, partition exclusions,
+Wi-Fi STA configuration, LED state daemon, USB CDC ACM console, WCNSS HCI
+path, and A30M pairing/RFCOMM flow.
+
+A change to a verified core component requires all of the following before it
+is published: a concrete defect or hardware/requirement change, a statement of
+the affected invariant, focused source and image gates, and a new physical
+acceptance result. Do not rewrite a working core component for cleanup, generic
+refactoring, speculative compatibility, or an unverified alternative path.
