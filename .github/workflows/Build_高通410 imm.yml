@@ -184,6 +184,18 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
+    - name: Normalize SVCI runtime script modes
+      run: |
+        cd openwrt
+        find files/etc/init.d files/etc/uci-defaults files/etc/hotplug.d files/usr/bin files/usr/sbin files/www/cgi-bin -type f -exec chmod 0755 {} +
+        test -x files/etc/init.d/obdclaw_led_status
+        test -x files/etc/init.d/usb_acm_console
+        test -x files/etc/init.d/bluetooth_spp_service
+        test -x files/etc/init.d/rfcomm_a30m
+        test -x files/usr/sbin/obdclaw_led_status
+        test -x files/usr/bin/bluetooth_spp_manager.sh
+        test -x files/usr/bin/rfcomm_a30m_bind.sh
+
     - name: Install extra packages
       if: ${{ inputs.extra_packages != '' }}
       run: |

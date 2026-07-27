@@ -107,6 +107,15 @@ The production profile intentionally disables Dropbear, uhttpd, and Android
 adb. Do not reintroduce network shell, web script upload, or unauthenticated
 maintenance paths as a release shortcut.
 
+## LED Contract
+
+The red LED is the communication-status indicator, not a normally-off fault
+lamp. With `wifi_sta` connected it must use a 700 ms on/off cadence; when the
+station is disconnected it must use a 120 ms on/off cadence. The blue LED
+indicates Wi-Fi activity: 120 ms on/off while traffic changes and 1000 ms
+on/off while idle. A release fails acceptance if the LED daemon is absent or
+not executable.
+
 ## Final Checklist
 
 ```text
