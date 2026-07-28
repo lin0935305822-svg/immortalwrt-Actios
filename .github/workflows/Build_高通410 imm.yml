@@ -154,8 +154,10 @@ jobs:
         ln -sf /mnt/openwrt $GITHUB_WORKSPACE/openwrt
 
 
-    - name:  files
-      run: cp -r files openwrt/files
+    - name: Stage custom rootfs files
+      run: |
+        mkdir -p openwrt/files
+        cp -a files/. openwrt/files/
 
     - name: Load custom feeds
       run: |
@@ -178,7 +180,6 @@ jobs:
 
     - name: Load custom configuration
       run: |
-        [ -e files ] && mv files openwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
         chmod +x $DIY_P2_SH
         cd openwrt
@@ -265,11 +266,12 @@ jobs:
        cd openwrt
        make defconfig
 
-    - name: Verify UFI003 WCNSS Bluetooth import
+    - name: Verify UFI003 configuration before package download
       if: ${{ inputs.profile == 'ufi003' }}
       run: |
         cd openwrt
         test -f package/kernel/btqcomsmd/Makefile
+        grep -Fx 'CONFIG_PACKAGE_kmod-bluetooth=y' .config
         grep -Fx 'CONFIG_PACKAGE_kmod-btqcomsmd=y' .config
         grep -Fx 'CONFIG_PACKAGE_bluez-daemon=y' .config
         grep -Fx 'CONFIG_PACKAGE_bluez-utils=y' .config
@@ -328,6 +330,9 @@ jobs:
         cd openwrt
         test "$(grep -c '^CONFIG_PACKAGE_kmod-btqcomsmd=y$' .config)" -eq 1
         test "$(grep -c '^CONFIG_PACKAGE_bluez-daemon=y$' .config)" -eq 1
+        test "$(grep -c '^CONFIG_PACKAGE_bluez-utils=y$' .config)" -eq 1
+        test "$(grep -c '^CONFIG_PACKAGE_bluez-libs=y$' .config)" -eq 1
+        test "$(grep -c '^CONFIG_PACKAGE_dbus=y$' .config)" -eq 1
         image_gz="$(find bin/targets -name '*openstick-ufi003-ext4-system.img.gz' -print -quit)"
         test -n "$image_gz"
         image_raw="$(mktemp)"
@@ -352,9 +357,10 @@ jobs:
               ;;
           esac
         }
-        for path in /etc/init.d/obdclaw_led_status /etc/init.d/usb_acm_console /etc/init.d/bluetooth_spp_service /etc/init.d/rfcomm_a30m /usr/sbin/obdclaw_led_status /usr/bin/bluetooth_spp_manager.sh /usr/bin/rfcomm_a30m_bind.sh; do
+        while IFS= read -r source_path; do
+          path="/${source_path#files/}"
           require_rootfs_exec "$path"
-        done
+        done < <(find files/etc/init.d files/etc/uci-defaults files/etc/hotplug.d files/usr/bin files/usr/sbin files/www/cgi-bin -type f -printf '%p\n' | sort)
 
     - name: Get kernel version
       run: |
@@ -424,7 +430,7 @@ jobs:
 
     - name: Generate release tag
       id: tag
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      if: success() && env.UPLOAD_RELEASE == 'true' && !cancelled()
       run: |
         PROFILE=${{ github.event.inputs.profile }}
         # 提取用户设置的 IP 和主机名
