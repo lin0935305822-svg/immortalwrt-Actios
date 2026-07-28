@@ -96,6 +96,7 @@ jobs:
       run: |
         sudo -E apt-get -y update
         sudo -E apt-get -y install $(curl -fsSL https://raw.githubusercontent.com/xuxin1955/depend_ubuntu2204_openwrt/refs/heads/main/depend_ubuntu2204_openwrt)
+        sudo -E apt-get -y install android-sdk-libsparse-utils
 
     - name: mkbootimg build
       run: |
@@ -111,6 +112,7 @@ jobs:
         else
         echo "❌ mkbootimg not found in PATH!"
         fi
+        command -v simg2img
 
         sudo timedatectl set-timezone "$TZ"
         sudo chmod 777 /mnt
@@ -338,9 +340,11 @@ jobs:
         test "$(grep -c '^CONFIG_PACKAGE_dbus=y$' .config)" -eq 1
         image_gz="$(find bin/targets -name '*openstick-ufi003-ext4-system.img.gz' -print -quit)"
         test -n "$image_gz"
+        image_sparse="$(mktemp)"
         image_raw="$(mktemp)"
-        trap 'rm -f "$image_raw"' EXIT
-        gzip -cd "$image_gz" > "$image_raw"
+        trap 'rm -f "$image_sparse" "$image_raw"' EXIT
+        gzip -cd "$image_gz" > "$image_sparse"
+        simg2img "$image_sparse" "$image_raw"
         require_rootfs_exec() {
           path="$1"
           stat_output="$(debugfs -R "stat $path" "$image_raw" 2>&1)" || {
