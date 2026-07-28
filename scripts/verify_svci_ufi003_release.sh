@@ -66,7 +66,7 @@ grep -Fq 'set_timer "$blue" 120 120' files/usr/sbin/obdclaw_led_status
 grep -Fq 'set_timer "$blue" 1000 1000' files/usr/sbin/obdclaw_led_status
 grep -Fq 'modprobe btqca' files/usr/bin/bluetooth_spp_manager.sh
 grep -Fq 'modprobe btqcomsmd' files/usr/bin/bluetooth_spp_manager.sh
-grep -Fq '/etc/init.d/bluetooth start' files/usr/bin/bluetooth_spp_manager.sh
+grep -Fq '/etc/init.d/bluetoothd start' files/usr/bin/bluetooth_spp_manager.sh
 grep -Fq 'Pairing successful' files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq 'sdptool browse' files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq 'rfcomm -i hci0 connect' files/usr/bin/rfcomm_a30m_bind.sh

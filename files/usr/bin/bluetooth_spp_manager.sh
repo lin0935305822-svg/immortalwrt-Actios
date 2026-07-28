@@ -22,9 +22,9 @@ start_bluez() {
     # bluez-daemon owns its D-Bus name through OpenWrt's init service.  A
     # second manually spawned daemon cannot acquire that name and prevents
     # the SPP manager from pairing reliably.
-    if [ -x /etc/init.d/bluetooth ]; then
+    if [ -x /etc/init.d/bluetoothd ]; then
         log 'Starting BlueZ through the OpenWrt service.'
-        /etc/init.d/bluetooth start 2>/dev/null || true
+        /etc/init.d/bluetoothd start 2>/dev/null || true
     else
         log 'OpenWrt BlueZ service is unavailable; using direct fallback.'
         bluetoothd_bin="$(command -v bluetoothd 2>/dev/null || true)"
