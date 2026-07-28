@@ -94,9 +94,10 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo -E apt-get -y update
-        sudo -E apt-get -y install $(curl -fsSL https://raw.githubusercontent.com/xuxin1955/depend_ubuntu2204_openwrt/refs/heads/main/depend_ubuntu2204_openwrt)
-        sudo -E apt-get -y install android-sdk-libsparse-utils
+        dependencies="$(curl --fail --silent --show-error --location --retry 3 --retry-all-errors --connect-timeout 20 --max-time 120 https://raw.githubusercontent.com/xuxin1955/depend_ubuntu2204_openwrt/refs/heads/main/depend_ubuntu2204_openwrt)"
+        test -n "$dependencies"
+        timeout 15m sudo -E apt-get -y -o Acquire::Retries=3 -o Acquire::http::Timeout=30 update
+        timeout 20m sudo -E apt-get -y -o Acquire::Retries=3 -o Acquire::http::Timeout=30 install $dependencies android-sdk-libsparse-utils
 
     - name: mkbootimg build
       run: |
