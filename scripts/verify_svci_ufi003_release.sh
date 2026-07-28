@@ -13,6 +13,40 @@ require_exec() {
     [ -x "$1" ] || { echo "required script is not executable: $1" >&2; exit 1; }
 }
 
+require_config_once() {
+    value="$1"
+    config_file="config/ufi003.config"
+    [ "$(tr -d '\r' < "$config_file" | grep -cx "$value")" -eq 1 ] || {
+        echo "missing or duplicated UFI003 config: $value" >&2
+        exit 1
+    }
+}
+
+verify_all_custom_scripts_executable() {
+    for directory in files/etc/init.d files/etc/uci-defaults files/etc/hotplug.d files/usr/bin files/usr/sbin files/www/cgi-bin; do
+        [ -d "$directory" ] || { echo "missing custom script directory: $directory" >&2; exit 1; }
+        non_executable="$(find "$directory" -type f ! -perm -0100 -print -quit)"
+        [ -z "$non_executable" ] || {
+            echo "custom script is not executable: $non_executable" >&2
+            exit 1
+        }
+    done
+}
+
+# This check runs before the machine profile is moved into OpenWrt's .config.
+if [ -f config/ufi003.config ]; then
+    require_config_once 'CONFIG_PACKAGE_kmod-bluetooth=y'
+    require_config_once 'CONFIG_PACKAGE_kmod-btqcomsmd=y'
+    require_config_once 'CONFIG_PACKAGE_bluez-daemon=y'
+    require_config_once 'CONFIG_PACKAGE_bluez-utils=y'
+    require_config_once 'CONFIG_PACKAGE_bluez-libs=y'
+    require_config_once 'CONFIG_PACKAGE_dbus=y'
+    ! tr -d '\r' < config/ufi003.config | grep -Fx 'CONFIG_PACKAGE_kmod-hci-uart=y'
+    ! tr -d '\r' < config/ufi003.config | grep -Fx 'CONFIG_PACKAGE_kmod-btusb=y'
+fi
+
+verify_all_custom_scripts_executable
+
 require_file files/usr/sbin/obdclaw_led_status
 require_file files/usr/bin/bluetooth_spp_manager.sh
 require_file files/usr/bin/rfcomm_a30m_bind.sh
