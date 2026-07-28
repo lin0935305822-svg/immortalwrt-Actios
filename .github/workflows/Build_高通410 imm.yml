@@ -327,8 +327,27 @@ jobs:
         image_raw="$(mktemp)"
         trap 'rm -f "$image_raw"' EXIT
         gzip -cd "$image_gz" > "$image_raw"
+        require_rootfs_exec() {
+          path="$1"
+          stat_output="$(debugfs -R "stat $path" "$image_raw" 2>&1)" || {
+            echo "::error::missing required rootfs path: $path"
+            printf '%s\n' "$stat_output"
+            exit 1
+          }
+          mode="$(printf '%s\n' "$stat_output" | sed -n 's/.*Mode:[[:space:]]*\([0-7][0-7]*\).*/\1/p' | head -n 1)"
+          case "$mode" in
+            0755|0100755)
+              echo "rootfs executable verified: $path ($mode)"
+              ;;
+            *)
+              echo "::error::rootfs path is not executable: $path (mode=${mode:-unreadable})"
+              printf '%s\n' "$stat_output"
+              exit 1
+              ;;
+          esac
+        }
         for path in /etc/init.d/obdclaw_led_status /etc/init.d/usb_acm_console /etc/init.d/bluetooth_spp_service /etc/init.d/rfcomm_a30m /usr/sbin/obdclaw_led_status /usr/bin/bluetooth_spp_manager.sh /usr/bin/rfcomm_a30m_bind.sh; do
-          debugfs -R "stat $path" "$image_raw" 2>/dev/null | grep -q 'Mode:  0755'
+          require_rootfs_exec "$path"
         done
 
     - name: Get kernel version
@@ -353,7 +372,7 @@ jobs:
 
     - name: Organize files
       id: organize
-      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+      if: success() && env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
         cd openwrt/bin/targets/*/*
         rm -rf packages
