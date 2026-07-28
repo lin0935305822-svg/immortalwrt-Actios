@@ -66,12 +66,19 @@ grep -Fq 'set_timer "$blue" 120 120' files/usr/sbin/obdclaw_led_status
 grep -Fq 'set_timer "$blue" 1000 1000' files/usr/sbin/obdclaw_led_status
 grep -Fq 'modprobe btqca' files/usr/bin/bluetooth_spp_manager.sh
 grep -Fq 'modprobe btqcomsmd' files/usr/bin/bluetooth_spp_manager.sh
+grep -Fq '/etc/init.d/bluetooth start' files/usr/bin/bluetooth_spp_manager.sh
 grep -Fq 'Pairing successful' files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq 'sdptool browse' files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq 'rfcomm -i hci0 connect' files/usr/bin/rfcomm_a30m_bind.sh
 
 if grep -Eq 'hciattach|ttyHS0|ttyMSM1|ttyS1' files/usr/bin/bluetooth_spp_manager.sh; then
     echo 'forbidden UART Bluetooth fallback found' >&2
+    exit 1
+fi
+
+if grep -Fq '"$bluetoothd_bin" --compat --noplugin=avrcp,network &' files/usr/bin/bluetooth_spp_manager.sh \
+    && ! grep -Fq 'OpenWrt BlueZ service is unavailable; using direct fallback.' files/usr/bin/bluetooth_spp_manager.sh; then
+    echo 'uncontrolled direct bluetoothd startup found' >&2
     exit 1
 fi
 

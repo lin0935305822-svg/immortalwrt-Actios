@@ -14,16 +14,40 @@ if ! pgrep -x dbus-daemon >/dev/null; then
     sleep 1
 fi
 
-if ! pgrep -x bluetoothd >/dev/null; then
-    log 'Starting BlueZ bluetoothd.'
-    bluetoothd_bin="$(command -v bluetoothd 2>/dev/null || true)"
-    if [ -n "$bluetoothd_bin" ]; then
-        "$bluetoothd_bin" --compat --noplugin=avrcp,network &
-        sleep 2
-    else
-        log 'bluetoothd is not installed.'
+start_bluez() {
+    if pgrep -x bluetoothd >/dev/null; then
+        return 0
     fi
-fi
+
+    # bluez-daemon owns its D-Bus name through OpenWrt's init service.  A
+    # second manually spawned daemon cannot acquire that name and prevents
+    # the SPP manager from pairing reliably.
+    if [ -x /etc/init.d/bluetooth ]; then
+        log 'Starting BlueZ through the OpenWrt service.'
+        /etc/init.d/bluetooth start 2>/dev/null || true
+    else
+        log 'OpenWrt BlueZ service is unavailable; using direct fallback.'
+        bluetoothd_bin="$(command -v bluetoothd 2>/dev/null || true)"
+        if [ -n "$bluetoothd_bin" ]; then
+            "$bluetoothd_bin" --compat --noplugin=avrcp,network &
+        else
+            log 'bluetoothd is not installed.'
+            return 1
+        fi
+    fi
+
+    retry=0
+    while [ "$retry" -lt 10 ]; do
+        pgrep -x bluetoothd >/dev/null && return 0
+        sleep 1
+        retry=$((retry + 1))
+    done
+
+    log 'BlueZ did not become ready.'
+    return 1
+}
+
+start_bluez || true
 
 # This board exposes Bluetooth through Qualcomm WCNSS SMD. It is not a UART
 # or USB HCI device. Do not attach arbitrary serial ports because that cannot
