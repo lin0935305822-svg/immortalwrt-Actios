@@ -271,6 +271,12 @@ jobs:
         cd openwrt
         test -f package/kernel/btqcomsmd/Makefile
         grep -Fx 'CONFIG_PACKAGE_kmod-btqcomsmd=y' .config
+        grep -Fx 'CONFIG_PACKAGE_bluez-daemon=y' .config
+        grep -Fx 'CONFIG_PACKAGE_bluez-utils=y' .config
+        grep -Fx 'CONFIG_PACKAGE_bluez-libs=y' .config
+        grep -Fx 'CONFIG_PACKAGE_dbus=y' .config
+        ! grep -Fx 'CONFIG_PACKAGE_kmod-hci-uart=y' .config
+        ! grep -Fx 'CONFIG_PACKAGE_kmod-btusb=y' .config
         grep -F 'CONFIG_QCOM_WCNSS_CTRL' package/kernel/btqcomsmd/Makefile
         grep -F 'CONFIG_BT_QCA' package/kernel/btqcomsmd/Makefile
         grep -F 'CONFIG_BT_QCOMSMD' package/kernel/btqcomsmd/Makefile
