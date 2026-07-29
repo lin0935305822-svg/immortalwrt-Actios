@@ -51,6 +51,7 @@ require_file files/usr/sbin/obdclaw_led_status
 require_file files/usr/bin/bluetooth_spp_manager.sh
 require_file files/usr/bin/rfcomm_a30m_bind.sh
 require_file files/usr/bin/obdclaw_bt_coex_test.sh
+require_file files/usr/bin/usb_console_debug.sh
 
 require_exec files/etc/init.d/obdclaw_led_status
 require_exec files/etc/init.d/usb_acm_console
@@ -59,6 +60,7 @@ require_exec files/etc/init.d/rfcomm_a30m
 require_exec files/usr/sbin/obdclaw_led_status
 require_exec files/usr/bin/bluetooth_spp_manager.sh
 require_exec files/usr/bin/rfcomm_a30m_bind.sh
+require_exec files/usr/bin/usb_console_debug.sh
 
 grep -Fq 'set_timer "$red" 700 700' files/usr/sbin/obdclaw_led_status
 grep -Fq 'set_timer "$red" 120 120' files/usr/sbin/obdclaw_led_status
@@ -72,6 +74,10 @@ grep -Fq 'sdptool browse' files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq 'rfcomm -i hci0 connect' files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq "SCAN_COMMAND='scan bredr'" files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq "printf '%s\\n' \"\$SCAN_COMMAND\"" files/usr/bin/rfcomm_a30m_bind.sh
+grep -Fq 'emit_vci_status()' files/usr/bin/usb_console_debug.sh
+grep -Fq 'vci target=' files/usr/bin/usb_console_debug.sh
+grep -Fq 'vci rfcomm' files/usr/bin/usb_console_debug.sh
+grep -Fq '/tmp/rfcomm_a30m_sdp.log' files/usr/bin/usb_console_debug.sh
 
 if grep -Eq 'hciattach|ttyHS0|ttyMSM1|ttyS1' files/usr/bin/bluetooth_spp_manager.sh; then
     echo 'forbidden UART Bluetooth fallback found' >&2
