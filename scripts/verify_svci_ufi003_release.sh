@@ -44,6 +44,7 @@ if [ -f config/ufi003.config ]; then
     require_config_once 'CONFIG_PACKAGE_uhttpd=y'
     require_config_once 'CONFIG_PACKAGE_libuhttpd-openssl=y'
     require_config_once 'CONFIG_PACKAGE_openssl-util=y'
+    ! tr -d '\r' < config/ufi003.config | grep -Fx '# CONFIG_PACKAGE_openssl-util is not set'
     ! tr -d '\r' < config/ufi003.config | grep -Fx 'CONFIG_PACKAGE_kmod-hci-uart=y'
     ! tr -d '\r' < config/ufi003.config | grep -Fx 'CONFIG_PACKAGE_kmod-btusb=y'
 fi
@@ -96,6 +97,7 @@ if grep -Eq '^[[:space:]]*(list|option)[[:space:]]+listen_http[[:space:]]' files
 fi
 grep -Fq 'replayed-token' files/www/cgi-bin/obdclaw-control.cgi
 grep -Fq 'unsupported-action' files/www/cgi-bin/obdclaw-control.cgi
+grep -Fq 'openssl req -x509' files/usr/bin/obdclaw_local_control_setup.sh
 
 if grep -Eq 'hciattach|ttyHS0|ttyMSM1|ttyS1' files/usr/bin/bluetooth_spp_manager.sh; then
     echo 'forbidden UART Bluetooth fallback found' >&2

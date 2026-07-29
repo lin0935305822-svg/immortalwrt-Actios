@@ -344,6 +344,8 @@ jobs:
         test "$(grep -c '^CONFIG_PACKAGE_bluez-utils=y$' .config)" -eq 1
         test "$(grep -c '^CONFIG_PACKAGE_bluez-libs=y$' .config)" -eq 1
         test "$(grep -c '^CONFIG_PACKAGE_dbus=y$' .config)" -eq 1
+        test "$(grep -c '^CONFIG_PACKAGE_openssl-util=y$' .config)" -eq 1
+        ! grep -Fx '# CONFIG_PACKAGE_openssl-util is not set' .config
         image_gz="$(find bin/targets -name '*openstick-ufi003-ext4-system.img.gz' -print -quit)"
         test -n "$image_gz"
         image_sparse="$(mktemp)"
@@ -374,6 +376,8 @@ jobs:
           path="/${source_path#files/}"
           require_rootfs_exec "$path"
         done < <(find files/etc/init.d files/etc/uci-defaults files/etc/hotplug.d files/usr/bin files/usr/sbin files/www/cgi-bin -type f -printf '%p\n' | sort)
+        require_rootfs_exec /usr/bin/openssl
+        require_rootfs_exec /usr/sbin/uhttpd
 
     - name: Get kernel version
       run: |
