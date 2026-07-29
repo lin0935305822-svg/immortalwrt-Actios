@@ -74,6 +74,7 @@ jobs:
     - name: Verify checked-in SVCI UFI003 contract
       run: |
         /bin/sh ./scripts/test_obdclaw_local_control.sh .
+        /bin/sh ./scripts/verify_ufi003_config_consistency.sh config/ufi003.config
         /bin/sh ./scripts/verify_svci_ufi003_release.sh .
 
     - name: Show hardware info
@@ -274,13 +275,14 @@ jobs:
     - name: Config defconfig
       id: config
       run: |
-       cd openwrt
-       make defconfig
+        cd openwrt
+        make defconfig
 
     - name: Verify UFI003 configuration before package download
       if: ${{ inputs.profile == 'ufi003' }}
       run: |
         cd openwrt
+        /bin/sh $GITHUB_WORKSPACE/scripts/verify_ufi003_config_consistency.sh .config
         test -f package/kernel/btqcomsmd/Makefile
         grep -Fx 'CONFIG_PACKAGE_kmod-bluetooth=y' .config
         grep -Fx 'CONFIG_PACKAGE_kmod-btqcomsmd=y' .config
@@ -288,6 +290,12 @@ jobs:
         grep -Fx 'CONFIG_PACKAGE_bluez-utils=y' .config
         grep -Fx 'CONFIG_PACKAGE_bluez-libs=y' .config
         grep -Fx 'CONFIG_PACKAGE_dbus=y' .config
+        grep -Fx 'CONFIG_PACKAGE_uhttpd=y' .config
+        grep -Fx 'CONFIG_PACKAGE_libuhttpd-openssl=y' .config
+        grep -Fx 'CONFIG_PACKAGE_openssl-util=y' .config
+        ! grep -Fx '# CONFIG_PACKAGE_uhttpd is not set' .config
+        ! grep -Fx '# CONFIG_PACKAGE_libuhttpd-openssl is not set' .config
+        ! grep -Fx '# CONFIG_PACKAGE_openssl-util is not set' .config
         ! grep -Fx 'CONFIG_PACKAGE_kmod-hci-uart=y' .config
         ! grep -Fx 'CONFIG_PACKAGE_kmod-btusb=y' .config
         grep -F 'CONFIG_QCOM_WCNSS_CTRL' package/kernel/btqcomsmd/Makefile
