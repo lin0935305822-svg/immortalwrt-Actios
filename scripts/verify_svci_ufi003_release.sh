@@ -70,6 +70,7 @@ require_exec files/usr/bin/bluetooth_spp_manager.sh
 require_exec files/usr/bin/rfcomm_a30m_bind.sh
 require_exec files/usr/bin/usb_console_debug.sh
 require_exec files/etc/init.d/obdclaw_local_control
+require_exec files/etc/init.d/obdclaw_uhttpd_watchdog
 require_exec files/usr/bin/obdclaw_local_control_setup.sh
 require_exec files/www/cgi-bin/obdclaw-device-identity.cgi
 require_exec files/www/cgi-bin/obdclaw-control.cgi
@@ -98,6 +99,9 @@ fi
 grep -Fq 'replayed-token' files/www/cgi-bin/obdclaw-control.cgi
 grep -Fq 'unsupported-action' files/www/cgi-bin/obdclaw-control.cgi
 grep -Fq 'openssl req -x509' files/usr/bin/obdclaw_local_control_setup.sh
+grep -Fq '/etc/init.d/obdclaw_local_control start' files/etc/uci-defaults/99-modem-led-status
+grep -Fq '/etc/init.d/uhttpd restart' files/etc/uci-defaults/99-modem-led-status
+grep -Fq '/etc/init.d/obdclaw_uhttpd_watchdog enable' files/etc/uci-defaults/99-modem-led-status
 grep -Fq 'Status: 404 Not Found' files/www/cgi-bin/obdclaw-debug.cgi
 
 if grep -Eq 'hciattach|ttyHS0|ttyMSM1|ttyS1' files/usr/bin/bluetooth_spp_manager.sh; then

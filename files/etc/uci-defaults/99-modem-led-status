@@ -40,13 +40,20 @@ if [ -f /etc/init.d/rfcomm_a30m ]; then
     /etc/init.d/rfcomm_a30m enable >/dev/null 2>&1 || true
 fi
 
-# The setup service runs before uhttpd and creates a per-device TLS identity.
-# uhttpd remains HTTPS-only as defined in /etc/config/uhttpd.
+# The TLS material must exist before the HTTPS listener is started.  uci-defaults
+# run after normal init service startup, so enable alone would defer uhttpd until
+# a second reboot and leave the phone without a first-boot control endpoint.
 if [ -f /etc/init.d/obdclaw_local_control ]; then
     /etc/init.d/obdclaw_local_control enable >/dev/null 2>&1 || true
+    /etc/init.d/obdclaw_local_control start >/dev/null 2>&1 || true
 fi
 if [ -f /etc/init.d/uhttpd ]; then
     /etc/init.d/uhttpd enable >/dev/null 2>&1 || true
+    /etc/init.d/uhttpd restart >/dev/null 2>&1 || true
+fi
+if [ -f /etc/init.d/obdclaw_uhttpd_watchdog ]; then
+    /etc/init.d/obdclaw_uhttpd_watchdog enable >/dev/null 2>&1 || true
+    /etc/init.d/obdclaw_uhttpd_watchdog start >/dev/null 2>&1 || true
 fi
 
 exit 0
