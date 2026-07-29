@@ -72,7 +72,9 @@ jobs:
       uses: actions/checkout@main
 
     - name: Verify checked-in SVCI UFI003 contract
-      run: /bin/sh ./scripts/verify_svci_ufi003_release.sh .
+      run: |
+        /bin/sh ./scripts/test_obdclaw_local_control.sh .
+        /bin/sh ./scripts/verify_svci_ufi003_release.sh .
 
     - name: Show hardware info
       run: |
