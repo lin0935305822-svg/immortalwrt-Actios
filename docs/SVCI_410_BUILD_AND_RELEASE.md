@@ -51,6 +51,7 @@ git -C $repo fetch origin main
 git -C $repo status --short --branch
 git -C $repo diff --check
 git -C $repo diff --stat
+& 'C:\Program Files\Git\bin\bash.exe' scripts/run_ufi003_preflight.sh .
 ```
 
 `origin` must be `lin0935305822-svg/immortalwrt-Actios.git`, never the `x7780`
@@ -96,15 +97,16 @@ For flashing and recovery, follow the repository-independent local runbook at
 `D:\SVCI\410\SVCI_410_CANONICAL_RUNBOOK.md`. The mandatory rules are:
 
 1. The device partitions are `boot` and `rootfs`, not `rootfs_data`.
-2. Flash rootfs with sparse chunk size `64m`.
+2. Flash rootfs as one Fastboot transaction: `fastboot flash rootfs system.img`.
 3. Never erase/write EFS, calibration, `modemst1`, `modemst2`, or `fsg`.
 4. Production is TP-Link STA; `RECOVERY_AP=1` is recovery-only.
 5. CDC ACM diagnostics stay enabled; COM number is assigned by Windows.
 6. Accept a Bluetooth build only after STA DHCP, WCNSS `hci0`, `bluetoothd`,
    and RFCOMM/SPP checks pass.
 
-The production profile intentionally disables Dropbear, uhttpd, and Android
-adb. Do not reintroduce network shell, web script upload, or unauthenticated
+The production profile disables Dropbear and Android adb. It enables the
+HTTPS-only uhttpd listener on port 8443 for the authenticated mobile-control
+API. Do not add HTTP, network shell, web script upload, or unauthenticated
 maintenance paths as a release shortcut.
 
 ## Verified Core Freeze
@@ -132,9 +134,11 @@ not executable.
 [ ] GitHub route is TP-Link WLAN, not phone RNDIS.
 [ ] origin is the specified SVCI repository.
 [ ] Intended changes are reviewed, tested, committed, pushed, and clean.
+[ ] Workflow policy and all three source gates pass before cloud dispatch.
 [ ] UFI003 Actions head SHA equals the release commit.
 [ ] UFI003 Actions is completed/success.
 [ ] boot and rootfs/system images are from that same run and hash-verified.
-[ ] Only boot/rootfs are flashed; rootfs uses 64m sparse chunks.
+[ ] Only boot/rootfs are flashed; rootfs is written as one Fastboot transaction
+    (`fastboot flash rootfs system.img`), never with `-S 64m`.
 [ ] COM, STA DHCP, WCNSS Bluetooth, and SPP acceptance pass.
 ```

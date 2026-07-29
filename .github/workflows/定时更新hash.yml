@@ -76,7 +76,9 @@ jobs:
         run: |
           sudo -E apt-get -y update
           sudo -E apt-get -y install $(curl -fsSL https://raw.githubusercontent.com/xuxin1955/depend_ubuntu2204_openwrt/refs/heads/main/depend_ubuntu2204_openwrt)
-          sudo timedatectl set-timezone "$TZ"
+          # The workflow environment already supplies TZ.  Hosted runners
+          # need not, and may not permit, a system-wide time-zone mutation.
+          echo "Build time zone: $TZ"
           sudo chmod 777 /mnt
 
       - name: 安装 mkbootimg

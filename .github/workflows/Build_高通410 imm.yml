@@ -73,9 +73,7 @@ jobs:
 
     - name: Verify checked-in SVCI UFI003 contract
       run: |
-        /bin/sh ./scripts/test_obdclaw_local_control.sh .
-        /bin/sh ./scripts/verify_ufi003_config_consistency.sh config/ufi003.config
-        /bin/sh ./scripts/verify_svci_ufi003_release.sh .
+        /bin/sh ./scripts/run_ufi003_preflight.sh .
 
     - name: Show hardware info
       run: |
@@ -118,7 +116,10 @@ jobs:
         fi
         command -v simg2img
 
-        sudo timedatectl set-timezone "$TZ"
+        # TZ is provided in the job environment.  Do not mutate the hosted
+        # runner's system time zone: that privilege is neither needed nor
+        # consistently available on GitHub-hosted workers.
+        echo "Build time zone: $TZ"
         sudo chmod 777 /mnt
         df -hT
         
