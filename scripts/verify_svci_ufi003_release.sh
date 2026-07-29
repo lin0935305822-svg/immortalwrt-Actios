@@ -41,6 +41,9 @@ if [ -f config/ufi003.config ]; then
     require_config_once 'CONFIG_PACKAGE_bluez-utils=y'
     require_config_once 'CONFIG_PACKAGE_bluez-libs=y'
     require_config_once 'CONFIG_PACKAGE_dbus=y'
+    require_config_once 'CONFIG_PACKAGE_uhttpd=y'
+    require_config_once 'CONFIG_PACKAGE_libuhttpd-openssl=y'
+    require_config_once 'CONFIG_PACKAGE_openssl-util=y'
     ! tr -d '\r' < config/ufi003.config | grep -Fx 'CONFIG_PACKAGE_kmod-hci-uart=y'
     ! tr -d '\r' < config/ufi003.config | grep -Fx 'CONFIG_PACKAGE_kmod-btusb=y'
 fi
@@ -52,6 +55,11 @@ require_file files/usr/bin/bluetooth_spp_manager.sh
 require_file files/usr/bin/rfcomm_a30m_bind.sh
 require_file files/usr/bin/obdclaw_bt_coex_test.sh
 require_file files/usr/bin/usb_console_debug.sh
+require_file files/usr/bin/obdclaw_local_control_setup.sh
+require_file scripts/test_obdclaw_local_control.sh
+require_file files/www/cgi-bin/obdclaw-device-identity.cgi
+require_file files/www/cgi-bin/obdclaw-control.cgi
+require_file files/etc/config/uhttpd
 
 require_exec files/etc/init.d/obdclaw_led_status
 require_exec files/etc/init.d/usb_acm_console
@@ -61,6 +69,11 @@ require_exec files/usr/sbin/obdclaw_led_status
 require_exec files/usr/bin/bluetooth_spp_manager.sh
 require_exec files/usr/bin/rfcomm_a30m_bind.sh
 require_exec files/usr/bin/usb_console_debug.sh
+require_exec files/etc/init.d/obdclaw_local_control
+require_exec files/usr/bin/obdclaw_local_control_setup.sh
+require_exec files/www/cgi-bin/obdclaw-device-identity.cgi
+require_exec files/www/cgi-bin/obdclaw-control.cgi
+require_exec scripts/test_obdclaw_local_control.sh
 
 grep -Fq 'set_timer "$red" 700 700' files/usr/sbin/obdclaw_led_status
 grep -Fq 'set_timer "$red" 120 120' files/usr/sbin/obdclaw_led_status
@@ -78,6 +91,13 @@ grep -Fq 'emit_vci_status()' files/usr/bin/usb_console_debug.sh
 grep -Fq 'vci target=' files/usr/bin/usb_console_debug.sh
 grep -Fq 'vci rfcomm' files/usr/bin/usb_console_debug.sh
 grep -Fq '/tmp/rfcomm_a30m_sdp.log' files/usr/bin/usb_console_debug.sh
+grep -Fq "list listen_https '0.0.0.0:8443'" files/etc/config/uhttpd
+if grep -Eq '^[[:space:]]*(list|option)[[:space:]]+listen_http[[:space:]]' files/etc/config/uhttpd; then
+    echo 'unencrypted local control listener found' >&2
+    exit 1
+fi
+grep -Fq 'replayed-token' files/www/cgi-bin/obdclaw-control.cgi
+grep -Fq 'unsupported-action' files/www/cgi-bin/obdclaw-control.cgi
 
 if grep -Eq 'hciattach|ttyHS0|ttyMSM1|ttyS1' files/usr/bin/bluetooth_spp_manager.sh; then
     echo 'forbidden UART Bluetooth fallback found' >&2

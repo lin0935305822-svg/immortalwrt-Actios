@@ -199,9 +199,12 @@ jobs:
         test -x files/etc/init.d/usb_acm_console
         test -x files/etc/init.d/bluetooth_spp_service
         test -x files/etc/init.d/rfcomm_a30m
+        test -x files/etc/init.d/obdclaw_local_control
         test -x files/usr/sbin/obdclaw_led_status
         test -x files/usr/bin/bluetooth_spp_manager.sh
         test -x files/usr/bin/rfcomm_a30m_bind.sh
+        test -x files/usr/bin/obdclaw_local_control_setup.sh
+        test -x files/www/cgi-bin/obdclaw-control.cgi
 
     - name: Verify SVCI source release contract
       run: |

@@ -1,0 +1,9 @@
+#!/bin/sh /etc/rc.common
+
+# Generate device-local material before uhttpd starts.  The secret and private
+# key live in the writable overlay and are intentionally never source assets.
+START=19
+
+start() {
+    /usr/bin/obdclaw_local_control_setup.sh
+}

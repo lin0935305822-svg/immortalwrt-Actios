@@ -1,0 +1,15 @@
+# SVCI local control is TLS-only.  Do not add a listen_http stanza: the phone
+# uses a native, certificate-pinning transport to this endpoint over TP-LINK.
+config uhttpd 'main'
+	option home '/www'
+	option cgi_prefix '/cgi-bin'
+	list interpreter '.cgi=/bin/sh'
+	list listen_https '0.0.0.0:8443'
+	option cert '/etc/uhttpd.crt'
+	option key '/etc/uhttpd.key'
+	option max_requests '16'
+	option max_connections '32'
+	option script_timeout '15'
+	option network_timeout '15'
+	option http_keepalive '20'
+	option tcp_keepalive '1'

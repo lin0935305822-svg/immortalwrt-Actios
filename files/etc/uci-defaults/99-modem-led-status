@@ -32,7 +32,7 @@ if command -v uci >/dev/null 2>&1 && [ -f /etc/config/system ]; then
 fi
 
 # 5. 确保蓝牙 SPP 与 A30M RFCOMM 绑定服务启用
-chmod 0755 /usr/bin/bluetooth_spp_manager.sh /usr/bin/rfcomm_a30m_bind.sh /etc/init.d/bluetooth_spp_service /etc/init.d/rfcomm_a30m 2>/dev/null || true
+chmod 0755 /usr/bin/bluetooth_spp_manager.sh /usr/bin/rfcomm_a30m_bind.sh /etc/init.d/bluetooth_spp_service /etc/init.d/rfcomm_a30m /usr/bin/obdclaw_local_control_setup.sh /etc/init.d/obdclaw_local_control 2>/dev/null || true
 if [ -f /etc/init.d/bluetooth_spp_service ]; then
     /etc/init.d/bluetooth_spp_service enable >/dev/null 2>&1 || true
 fi
@@ -40,5 +40,13 @@ if [ -f /etc/init.d/rfcomm_a30m ]; then
     /etc/init.d/rfcomm_a30m enable >/dev/null 2>&1 || true
 fi
 
-exit 0
+# The setup service runs before uhttpd and creates a per-device TLS identity.
+# uhttpd remains HTTPS-only as defined in /etc/config/uhttpd.
+if [ -f /etc/init.d/obdclaw_local_control ]; then
+    /etc/init.d/obdclaw_local_control enable >/dev/null 2>&1 || true
+fi
+if [ -f /etc/init.d/uhttpd ]; then
+    /etc/init.d/uhttpd enable >/dev/null 2>&1 || true
+fi
 
+exit 0
