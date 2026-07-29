@@ -98,6 +98,7 @@ fi
 grep -Fq 'replayed-token' files/www/cgi-bin/obdclaw-control.cgi
 grep -Fq 'unsupported-action' files/www/cgi-bin/obdclaw-control.cgi
 grep -Fq 'openssl req -x509' files/usr/bin/obdclaw_local_control_setup.sh
+grep -Fq 'Status: 404 Not Found' files/www/cgi-bin/obdclaw-debug.cgi
 
 if grep -Eq 'hciattach|ttyHS0|ttyMSM1|ttyS1' files/usr/bin/bluetooth_spp_manager.sh; then
     echo 'forbidden UART Bluetooth fallback found' >&2
