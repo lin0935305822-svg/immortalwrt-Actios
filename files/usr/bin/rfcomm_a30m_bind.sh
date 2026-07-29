@@ -19,6 +19,13 @@ RFCOMM_NODE="/dev/rfcomm${RFCOMM_DEV_INDEX}"
 SCAN_TRANSPORT="$(get_config scan_transport bredr)"
 SPP_UUID='00001101-0000-1000-8000-00805f9b34fb'
 
+# A30M SPP is a Classic Bluetooth service.  Generic "scan on" can select
+# LE scanning and never create a BR/EDR device object for pairing.
+if [ "$SCAN_TRANSPORT" != 'bredr' ]; then
+    log "Ignoring unsupported scan transport '$SCAN_TRANSPORT'; Classic SPP requires bredr."
+fi
+SCAN_COMMAND='scan bredr'
+
 while ! hciconfig hci0 2>/dev/null | grep -q 'UP RUNNING'; do
     log 'Waiting for Bluetooth adapter hci0 to be UP.'
     sleep 3
@@ -63,7 +70,7 @@ pair_device() {
             printf 'default-agent\n'
             # BlueZ only accepts a pairing request for a current device
             # object. Discover and pair in the same bluetoothctl session.
-            printf 'scan on\n'
+            printf '%s\n' "$SCAN_COMMAND"
             sleep 10
             printf 'pair %s\n' "$mac"
             # Some A30M units finish pairing after discovery has stopped;
