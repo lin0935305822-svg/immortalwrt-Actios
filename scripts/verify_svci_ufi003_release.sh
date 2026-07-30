@@ -60,6 +60,7 @@ require_file files/usr/bin/obdclaw_local_control_setup.sh
 require_file files/www/cgi-bin/obdclaw-device-identity.cgi
 require_file files/www/cgi-bin/obdclaw-control.cgi
 require_file files/etc/config/uhttpd
+require_file files/etc/uci-defaults/92-obdclaw-tls-firewall
 
 require_exec files/etc/init.d/obdclaw_led_status
 require_exec files/etc/init.d/usb_acm_console
@@ -71,6 +72,7 @@ require_exec files/usr/bin/rfcomm_a30m_bind.sh
 require_exec files/usr/bin/usb_console_debug.sh
 require_exec files/etc/init.d/obdclaw_local_control
 require_exec files/etc/init.d/obdclaw_uhttpd_watchdog
+require_exec files/etc/uci-defaults/92-obdclaw-tls-firewall
 require_exec files/usr/bin/obdclaw_local_control_setup.sh
 require_exec files/www/cgi-bin/obdclaw-device-identity.cgi
 require_exec files/www/cgi-bin/obdclaw-control.cgi
@@ -103,6 +105,10 @@ grep -Fq '/etc/init.d/obdclaw_local_control start' files/etc/uci-defaults/99-mod
 grep -Fq '/etc/init.d/uhttpd restart' files/etc/uci-defaults/99-modem-led-status
 grep -Fq '/etc/init.d/obdclaw_uhttpd_watchdog enable' files/etc/uci-defaults/99-modem-led-status
 grep -Fq 'Status: 404 Not Found' files/www/cgi-bin/obdclaw-debug.cgi
+grep -Fq "firewall.wifi_sta_control.name='wifi_sta'" files/etc/uci-defaults/92-obdclaw-tls-firewall
+grep -Fq "firewall.obdclaw_tls_control.src_ip='192.168.0.0/24'" files/etc/uci-defaults/92-obdclaw-tls-firewall
+grep -Fq "firewall.obdclaw_tls_control.dest_port='8443'" files/etc/uci-defaults/92-obdclaw-tls-firewall
+grep -Fq "firewall.obdclaw_tls_control.target='ACCEPT'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 
 if grep -Eq 'hciattach|ttyHS0|ttyMSM1|ttyS1' files/usr/bin/bluetooth_spp_manager.sh; then
     echo 'forbidden UART Bluetooth fallback found' >&2

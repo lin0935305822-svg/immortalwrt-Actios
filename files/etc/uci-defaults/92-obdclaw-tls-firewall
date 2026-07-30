@@ -1,0 +1,26 @@
+#!/bin/sh
+# The production station is an untrusted uplink.  Expose only the pinned TLS
+# control API to peers on the configured TP-LINK LAN; keep all other input,
+# including HTTP/80, rejected.
+if command -v uci >/dev/null 2>&1 && [ -f /etc/config/firewall ]; then
+    uci -q delete firewall.wifi_sta_control
+    uci set firewall.wifi_sta_control='zone'
+    uci set firewall.wifi_sta_control.name='wifi_sta'
+    uci add_list firewall.wifi_sta_control.network='wifi_sta'
+    uci set firewall.wifi_sta_control.input='REJECT'
+    uci set firewall.wifi_sta_control.output='ACCEPT'
+    uci set firewall.wifi_sta_control.forward='REJECT'
+
+    uci -q delete firewall.obdclaw_tls_control
+    uci set firewall.obdclaw_tls_control='rule'
+    uci set firewall.obdclaw_tls_control.name='Allow-OBDclaw-TLS-Control'
+    uci set firewall.obdclaw_tls_control.src='wifi_sta'
+    uci set firewall.obdclaw_tls_control.src_ip='192.168.0.0/24'
+    uci set firewall.obdclaw_tls_control.proto='tcp'
+    uci set firewall.obdclaw_tls_control.dest_port='8443'
+    uci set firewall.obdclaw_tls_control.target='ACCEPT'
+    uci commit firewall
+    /etc/init.d/firewall restart >/dev/null 2>&1 || true
+fi
+
+exit 0

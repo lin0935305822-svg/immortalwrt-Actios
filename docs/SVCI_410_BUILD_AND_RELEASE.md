@@ -106,8 +106,9 @@ For flashing and recovery, follow the repository-independent local runbook at
 
 The production profile disables Dropbear and Android adb. It enables the
 HTTPS-only uhttpd listener on port 8443 for the authenticated mobile-control
-API. Do not add HTTP, network shell, web script upload, or unauthenticated
-maintenance paths as a release shortcut.
+API. The `wifi_sta` firewall zone permits only TCP 8443 from the TP-Link
+`192.168.0.0/24` LAN; HTTP, network shell, web script upload, and
+unauthenticated maintenance paths remain forbidden.
 
 ## Verified Core Freeze
 
