@@ -57,6 +57,7 @@ require_file files/usr/bin/rfcomm_a30m_bind.sh
 require_file files/usr/bin/obdclaw_bt_coex_test.sh
 require_file files/usr/bin/usb_console_debug.sh
 require_file files/usr/bin/obdclaw_local_control_setup.sh
+require_file files/usr/bin/obdclaw_runner_authority_install.sh
 require_file files/www/cgi-bin/obdclaw-device-identity.cgi
 require_file files/www/cgi-bin/obdclaw-control.cgi
 require_file files/www/cgi-bin/obdclaw-runner.cgi
@@ -75,6 +76,7 @@ require_exec files/etc/init.d/obdclaw_local_control
 require_exec files/etc/init.d/obdclaw_uhttpd_watchdog
 require_exec files/etc/uci-defaults/92-obdclaw-tls-firewall
 require_exec files/usr/bin/obdclaw_local_control_setup.sh
+require_exec files/usr/bin/obdclaw_runner_authority_install.sh
 require_exec files/www/cgi-bin/obdclaw-device-identity.cgi
 require_exec files/www/cgi-bin/obdclaw-control.cgi
 require_exec files/www/cgi-bin/obdclaw-runner.cgi
@@ -105,6 +107,7 @@ grep -Fq 'unsupported-action' files/www/cgi-bin/obdclaw-control.cgi
 grep -Fq 'authorization-not-provisioned' files/www/cgi-bin/obdclaw-runner.cgi
 grep -Fq 'replayed-envelope' files/www/cgi-bin/obdclaw-runner.cgi
 grep -Fq 'runner-not-installed' files/www/cgi-bin/obdclaw-runner.cgi
+grep -Fq 'authority key must be Ed25519' files/usr/bin/obdclaw_runner_authority_install.sh
 grep -Fq 'openssl req -x509' files/usr/bin/obdclaw_local_control_setup.sh
 grep -Fq '/etc/init.d/obdclaw_local_control start' files/etc/uci-defaults/99-modem-led-status
 grep -Fq '/etc/init.d/uhttpd restart' files/etc/uci-defaults/99-modem-led-status
