@@ -59,6 +59,7 @@ require_file files/usr/bin/usb_console_debug.sh
 require_file files/usr/bin/obdclaw_local_control_setup.sh
 require_file files/www/cgi-bin/obdclaw-device-identity.cgi
 require_file files/www/cgi-bin/obdclaw-control.cgi
+require_file files/www/cgi-bin/obdclaw-runner.cgi
 require_file files/etc/config/uhttpd
 require_file files/etc/uci-defaults/92-obdclaw-tls-firewall
 
@@ -76,6 +77,7 @@ require_exec files/etc/uci-defaults/92-obdclaw-tls-firewall
 require_exec files/usr/bin/obdclaw_local_control_setup.sh
 require_exec files/www/cgi-bin/obdclaw-device-identity.cgi
 require_exec files/www/cgi-bin/obdclaw-control.cgi
+require_exec files/www/cgi-bin/obdclaw-runner.cgi
 
 grep -Fq 'set_timer "$red" 700 700' files/usr/sbin/obdclaw_led_status
 grep -Fq 'set_timer "$red" 120 120' files/usr/sbin/obdclaw_led_status
@@ -100,6 +102,9 @@ if grep -Eq '^[[:space:]]*(list|option)[[:space:]]+listen_http[[:space:]]' files
 fi
 grep -Fq 'replayed-token' files/www/cgi-bin/obdclaw-control.cgi
 grep -Fq 'unsupported-action' files/www/cgi-bin/obdclaw-control.cgi
+grep -Fq 'authorization-not-provisioned' files/www/cgi-bin/obdclaw-runner.cgi
+grep -Fq 'replayed-envelope' files/www/cgi-bin/obdclaw-runner.cgi
+grep -Fq 'runner-not-installed' files/www/cgi-bin/obdclaw-runner.cgi
 grep -Fq 'openssl req -x509' files/usr/bin/obdclaw_local_control_setup.sh
 grep -Fq '/etc/init.d/obdclaw_local_control start' files/etc/uci-defaults/99-modem-led-status
 grep -Fq '/etc/init.d/uhttpd restart' files/etc/uci-defaults/99-modem-led-status

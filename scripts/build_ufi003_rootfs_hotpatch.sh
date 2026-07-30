@@ -93,7 +93,8 @@ for required_path in \
     etc/init.d/obdclaw_uhttpd_watchdog \
     usr/bin/obdclaw_local_control_setup.sh \
     www/cgi-bin/obdclaw-device-identity.cgi \
-    www/cgi-bin/obdclaw-control.cgi; do
+    www/cgi-bin/obdclaw-control.cgi \
+    www/cgi-bin/obdclaw-runner.cgi; do
     [[ -x "$mount_dir/$required_path" ]] || { echo "rootfs executable missing: $required_path" >&2; exit 1; }
 done
 grep -Fq "list listen_https '0.0.0.0:8443'" "$mount_dir/etc/config/uhttpd"

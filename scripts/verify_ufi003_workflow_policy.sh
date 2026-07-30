@@ -30,6 +30,7 @@ for script in \
     './scripts/verify_ufi003_workflow_policy.sh .' \
     './scripts/verify_ufi003_config_consistency.sh config/ufi003.config' \
     './scripts/test_obdclaw_local_control.sh .' \
+    './scripts/test_obdclaw_runner_auth.sh .' \
     './scripts/verify_svci_ufi003_release.sh .'; do
     grep -Fq "$script" scripts/run_ufi003_preflight.sh || {
         echo "unified preflight is missing: $script" >&2
