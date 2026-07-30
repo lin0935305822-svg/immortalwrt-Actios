@@ -14,4 +14,4 @@ fi
 
 fingerprint="$(openssl x509 -in "$CERT" -noout -fingerprint -sha256 | sed 's/^.*=//' | tr -d ':')"
 device_id="$(cat "$DEVICE_ID_FILE")"
-printf '{"ok":true,"deviceId":"%s","certificateSha256":"%s","api":"https://<device>:8443/cgi-bin/obdclaw-control.cgi"}\n' "$device_id" "$fingerprint"
+printf '{"ok":true,"deviceId":"%s","certificateSha256":"%s","api":"https://<device>:8443/cgi-bin/obdclaw-runner.cgi"}\n' "$device_id" "$fingerprint"
