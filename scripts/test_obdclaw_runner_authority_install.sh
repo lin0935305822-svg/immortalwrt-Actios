@@ -6,7 +6,14 @@ installer="$root/files/usr/bin/obdclaw_runner_authority_install.sh"
 [ -x "$installer" ] || { echo "authority installer is not executable: $installer" >&2; exit 1; }
 
 tmp="$(mktemp -d)"
-trap 'rm -rf "$tmp"' EXIT HUP INT TERM
+cleanup() {
+    if [ "$(id -u)" -eq 0 ]; then
+        rm -rf "$tmp"
+    else
+        sudo -n rm -rf "$tmp"
+    fi
+}
+trap cleanup EXIT HUP INT TERM
 openssl genpkey -algorithm ED25519 -out "$tmp/ed-private.pem" >/dev/null 2>&1
 openssl pkey -in "$tmp/ed-private.pem" -pubout -out "$tmp/ed-public.pem" >/dev/null 2>&1
 openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out "$tmp/rsa-private.pem" >/dev/null 2>&1
