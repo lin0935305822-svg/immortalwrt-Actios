@@ -1,0 +1,36 @@
+#!/bin/sh
+# Stable, boot-scoped authorization time. System wall time can be corrected
+# after Wi-Fi comes up; active authorization windows must not jump with it.
+set -eu
+
+STATE_FILE="${OBDCLAW_AUTH_CLOCK_STATE:-/tmp/obdclaw-auth-clock-base}"
+
+uptime_seconds() {
+    awk '{print int($1)}' /proc/uptime
+}
+
+valid_number() {
+    case "$1" in ''|*[!0-9]*) return 1;; esac
+    return 0
+}
+
+uptime="$(uptime_seconds)"
+base=""
+if [ -r "$STATE_FILE" ]; then
+    base="$(cat "$STATE_FILE" 2>/dev/null || true)"
+fi
+
+if ! valid_number "$base"; then
+    wall_clock="$(date +%s)"
+    valid_number "$wall_clock" || exit 1
+    candidate=$((wall_clock - uptime))
+    mkdir -p "$(dirname "$STATE_FILE")"
+    if ( set -C; printf '%s\n' "$candidate" >"$STATE_FILE" ) 2>/dev/null; then
+        base="$candidate"
+    else
+        base="$(cat "$STATE_FILE" 2>/dev/null || true)"
+        valid_number "$base" || exit 1
+    fi
+fi
+
+printf '%s\n' "$((base + uptime))"

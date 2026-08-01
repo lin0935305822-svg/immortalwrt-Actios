@@ -106,7 +106,12 @@ grep -Fq 'replayed-token' files/www/cgi-bin/obdclaw-control.cgi
 grep -Fq 'unsupported-action' files/www/cgi-bin/obdclaw-control.cgi
 grep -Fq 'authorization-not-provisioned' files/www/cgi-bin/obdclaw-runner.cgi
 grep -Fq 'replayed-envelope' files/www/cgi-bin/obdclaw-runner.cgi
-grep -Fq 'runner-not-installed' files/www/cgi-bin/obdclaw-runner.cgi
+grep -Fq 'obdclaw.runner-ui.v1' files/www/cgi-bin/obdclaw-runner.cgi
+grep -Fq 'undeclared-control' files/www/cgi-bin/obdclaw-runner.cgi
+grep -Fq 'stale-frame' files/www/cgi-bin/obdclaw-runner.cgi
+grep -Fq '"clockUnix"' files/www/cgi-bin/obdclaw-device-identity.cgi
+test -x files/usr/bin/obdclaw_auth_clock
+grep -Fq 'obdclaw_auth_clock' files/www/cgi-bin/obdclaw-runner.cgi
 grep -Fq 'authority key must be Ed25519' files/usr/bin/obdclaw_runner_authority_install.sh
 grep -Fq 'openssl req -x509' files/usr/bin/obdclaw_local_control_setup.sh
 grep -Fq '/etc/init.d/obdclaw_local_control start' files/etc/uci-defaults/99-modem-led-status

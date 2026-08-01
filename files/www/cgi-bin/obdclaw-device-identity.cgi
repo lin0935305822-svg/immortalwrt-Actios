@@ -14,4 +14,7 @@ fi
 
 fingerprint="$(openssl x509 -in "$CERT" -noout -fingerprint -sha256 | sed 's/^.*=//' | tr -d ':')"
 device_id="$(cat "$DEVICE_ID_FILE")"
-printf '{"ok":true,"deviceId":"%s","certificateSha256":"%s","api":"https://<device>:8443/cgi-bin/obdclaw-runner.cgi"}\n' "$device_id" "$fingerprint"
+# The boot-scoped authorization clock remains monotonic when NTP adjusts the
+# Linux wall clock. A reboot deliberately establishes a new authorization era.
+clock_unix="$(/usr/bin/obdclaw_auth_clock)"
+printf '{"ok":true,"deviceId":"%s","certificateSha256":"%s","clockUnix":%s,"api":"https://<device>:8443/cgi-bin/obdclaw-runner.cgi"}\n' "$device_id" "$fingerprint" "$clock_unix"

@@ -91,6 +91,7 @@ mounted=1
 for required_path in \
     etc/init.d/obdclaw_local_control \
     etc/init.d/obdclaw_uhttpd_watchdog \
+    usr/bin/obdclaw_auth_clock \
     usr/bin/obdclaw_local_control_setup.sh \
     www/cgi-bin/obdclaw-device-identity.cgi \
     www/cgi-bin/obdclaw-control.cgi \
