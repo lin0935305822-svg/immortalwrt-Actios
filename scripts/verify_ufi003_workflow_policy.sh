@@ -25,6 +25,10 @@ fi
 require_text 'TZ: Asia/Shanghai'
 require_text '/bin/sh ./scripts/run_ufi003_preflight.sh .'
 require_text 'Build time zone: $TZ'
+require_text 'svci-release-provenance.v1'
+require_text 'sourceCommit'
+require_text 'workflowRunUrl'
+require_text 'FLASH_PACKAGE_SHA256'
 
 for script in \
     './scripts/verify_ufi003_workflow_policy.sh .' \

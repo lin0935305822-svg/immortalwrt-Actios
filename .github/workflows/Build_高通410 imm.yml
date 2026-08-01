@@ -449,6 +449,19 @@ jobs:
         cp *.manifest release_files/ 2>/dev/null || true
         cp *.buildinfo release_files/ 2>/dev/null || true
         cp sha256sums release_files/ 2>/dev/null || true
+        FLASH_PACKAGE_SHA256=$(sha256sum "release_files/$ZIP_NAME" | awk '{print $1}')
+        cat > release_files/svci-release-provenance.json <<EOF
+        {
+          "schema": "svci-release-provenance.v1",
+          "sourceRepository": "$GITHUB_REPOSITORY",
+          "sourceCommit": "$GITHUB_SHA",
+          "workflowRunUrl": "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID",
+          "flashPackage": {
+            "path": "$ZIP_NAME",
+            "sha256": "$FLASH_PACKAGE_SHA256"
+          }
+        }
+        EOF
 
         echo "FIRMWARE=$PWD/release_files" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
