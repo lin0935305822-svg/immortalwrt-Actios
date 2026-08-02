@@ -11,6 +11,25 @@ if command -v uci >/dev/null 2>&1 && [ -f /etc/config/firewall ]; then
     uci set firewall.wifi_sta_control.output='ACCEPT'
     uci set firewall.wifi_sta_control.forward='REJECT'
 
+    # A sidecar can only be staged through the physically attached USB RNDIS
+    # link.  Do not expose SSH through the untrusted Wi-Fi station.
+    uci -q delete firewall.usb_rndis_control
+    uci set firewall.usb_rndis_control='zone'
+    uci set firewall.usb_rndis_control.name='usb_rndis'
+    uci add_list firewall.usb_rndis_control.network='usb_rndis'
+    uci set firewall.usb_rndis_control.input='REJECT'
+    uci set firewall.usb_rndis_control.output='ACCEPT'
+    uci set firewall.usb_rndis_control.forward='REJECT'
+
+    uci -q delete firewall.usb_rndis_ssh
+    uci set firewall.usb_rndis_ssh='rule'
+    uci set firewall.usb_rndis_ssh.name='Allow-USB-RNDIS-SSH'
+    uci set firewall.usb_rndis_ssh.src='usb_rndis'
+    uci set firewall.usb_rndis_ssh.src_ip='192.168.41.0/24'
+    uci set firewall.usb_rndis_ssh.proto='tcp'
+    uci set firewall.usb_rndis_ssh.dest_port='22'
+    uci set firewall.usb_rndis_ssh.target='ACCEPT'
+
     uci -q delete firewall.obdclaw_tls_control
     uci set firewall.obdclaw_tls_control='rule'
     uci set firewall.obdclaw_tls_control.name='Allow-OBDclaw-TLS-Control'

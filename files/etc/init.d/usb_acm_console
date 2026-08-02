@@ -3,10 +3,12 @@
 START=99
 STOP=10
 
-GADGET_DIR="/sys/kernel/config/usb_gadget/svci_console"
+# RNDIS owns g1 from START=10.  Add ACM to that same gadget rather than
+# replacing it, so the host keeps a direct management network while receiving
+# the write-only diagnostics stream.
+GADGET_DIR="/sys/kernel/config/usb_gadget/g1"
 
 start() {
-    /etc/init.d/usb_rndis_gadget stop >/dev/null 2>&1 || true
     modprobe libcomposite 2>/dev/null || true
     modprobe u_serial 2>/dev/null || true
     modprobe usb_f_acm 2>/dev/null || true
@@ -19,14 +21,10 @@ start() {
     echo "" > "$GADGET_DIR/UDC" 2>/dev/null || true
     # Do not use Qualcomm's diagnostic VID/PID here: Windows binds those IDs
     # to qcusbser instead of its standard CDC ACM console driver.
-    echo 0x1d6b > "$GADGET_DIR/idVendor"
-    echo 0x0104 > "$GADGET_DIR/idProduct"
-    mkdir -p "$GADGET_DIR/strings/0x409" "$GADGET_DIR/configs/c.1/strings/0x409"
-    echo Qualcomm > "$GADGET_DIR/strings/0x409/manufacturer"
-    echo "410 Linux Console" > "$GADGET_DIR/strings/0x409/product"
-    echo 410CONSOLE001 > "$GADGET_DIR/strings/0x409/serialnumber"
-    echo "CDC ACM Console" > "$GADGET_DIR/configs/c.1/strings/0x409/configuration"
-    echo 250 > "$GADGET_DIR/configs/c.1/MaxPower"
+    [ -d "$GADGET_DIR/functions/rndis.usb0" ] || /etc/init.d/usb_rndis_gadget start
+    [ -d "$GADGET_DIR/functions/rndis.usb0" ] || return 1
+    echo "" > "$GADGET_DIR/UDC" 2>/dev/null || true
+    echo "RNDIS + CDC ACM Console" > "$GADGET_DIR/configs/c.1/strings/0x409/configuration"
     mkdir -p "$GADGET_DIR/functions/acm.GS0"
     [ -e "$GADGET_DIR/configs/c.1/acm.GS0" ] || ln -s "$GADGET_DIR/functions/acm.GS0" "$GADGET_DIR/configs/c.1/acm.GS0"
 

@@ -15,3 +15,12 @@ config dhcp 'lan'
 	option limit '150'
 	option leasetime '12h'
 	option dhcpv4 'server'
+
+# Direct USB maintenance transport.  This remains physically local and is
+# separate from both the Wi-Fi STA uplink and the diagnostic Ethernet link.
+config dhcp 'usb_rndis'
+	option interface 'usb_rndis'
+	option start '100'
+	option limit '50'
+	option leasetime '12h'
+	option dhcpv4 'server'
