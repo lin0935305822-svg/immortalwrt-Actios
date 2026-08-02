@@ -2,8 +2,19 @@
 # Source-stage gate for SVCI UFI003 release builds.
 set -eu
 
-root="${1:-.}"
 script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+control_root="$(dirname "$script_dir")"
+root=""
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --control-root) control_root="$2"; shift 2 ;;
+        --rootfs-root) root="$2"; shift 2 ;;
+        *) [ -z "$root" ] || { echo "unexpected argument: $1" >&2; exit 2; }; root="$1"; shift ;;
+    esac
+done
+
+[ -n "$root" ] || { echo 'missing rootfs root' >&2; exit 2; }
 cd "$root"
 
 require_file() {
@@ -88,7 +99,7 @@ grep -Fq 'set_timer "$red" 700 700' files/usr/sbin/obdclaw_led_status
 grep -Fq 'set_timer "$red" 120 120' files/usr/sbin/obdclaw_led_status
 grep -Fq 'set_timer "$blue" 120 120' files/usr/sbin/obdclaw_led_status
 grep -Fq 'set_timer "$blue" 1000 1000' files/usr/sbin/obdclaw_led_status
-/bin/sh "$script_dir/verify_ufi003_sta_profile.sh" .
+/bin/sh "$control_root/scripts/verify_ufi003_sta_profile.sh" --rootfs-root .
 grep -Fq 'modprobe btqca' files/usr/bin/bluetooth_spp_manager.sh
 grep -Fq 'modprobe btqcomsmd' files/usr/bin/bluetooth_spp_manager.sh
 grep -Fq '/etc/init.d/bluetoothd start' files/usr/bin/bluetooth_spp_manager.sh

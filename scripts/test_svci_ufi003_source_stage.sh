@@ -3,6 +3,7 @@
 set -eu
 
 root="${1:-.}"
+control_root="$(CDPATH= cd -- "$root" && pwd)"
 script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 gate="$script_dir/verify_svci_ufi003_release.sh"
 temp="$(mktemp -d)"
@@ -14,7 +15,7 @@ rm -rf "$temp/openwrt/scripts"
 
 (
     cd "$temp/openwrt"
-    /bin/sh "$gate" .
+    /bin/sh "$gate" --control-root "$control_root" --rootfs-root .
 )
 
 echo 'SVCI UFI003 staged source release gate passed.'
