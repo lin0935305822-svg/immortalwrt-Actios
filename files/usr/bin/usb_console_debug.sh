@@ -25,6 +25,12 @@ emit_vci_status() {
     tail -n 8 /tmp/rfcomm_a30m_connect.log 2>/dev/null | while IFS= read -r line; do emit "vci connect $line"; done
 }
 
+emit_sta_status() {
+    ubus call network.interface.wifi_sta status 2>/dev/null | tr '\n' ' ' | \
+        sed 's/[[:space:]][[:space:]]*/ /g' | \
+        while IFS= read -r line; do emit "sta status $line"; done
+}
+
 snapshot() {
     emit '=== SVCI MSM8916 runtime debug ==='
     emit "time=$(date -Iseconds 2>/dev/null || date)"
@@ -41,6 +47,7 @@ snapshot() {
 
 snapshot
 while sleep 30; do
+    emit_sta_status
     emit_vci_status
     emit "heartbeat $(date -Iseconds 2>/dev/null || date)"
 done

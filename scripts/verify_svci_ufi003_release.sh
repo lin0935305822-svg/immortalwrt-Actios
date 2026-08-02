@@ -62,6 +62,8 @@ require_file files/www/cgi-bin/obdclaw-device-identity.cgi
 require_file files/www/cgi-bin/obdclaw-control.cgi
 require_file files/www/cgi-bin/obdclaw-runner.cgi
 require_file files/etc/config/uhttpd
+require_file files/etc/config/wireless
+require_file files/etc/config/network
 require_file files/etc/uci-defaults/92-obdclaw-tls-firewall
 
 require_exec files/etc/init.d/obdclaw_led_status
@@ -85,6 +87,7 @@ grep -Fq 'set_timer "$red" 700 700' files/usr/sbin/obdclaw_led_status
 grep -Fq 'set_timer "$red" 120 120' files/usr/sbin/obdclaw_led_status
 grep -Fq 'set_timer "$blue" 120 120' files/usr/sbin/obdclaw_led_status
 grep -Fq 'set_timer "$blue" 1000 1000' files/usr/sbin/obdclaw_led_status
+/bin/sh ./scripts/verify_ufi003_sta_profile.sh .
 grep -Fq 'modprobe btqca' files/usr/bin/bluetooth_spp_manager.sh
 grep -Fq 'modprobe btqcomsmd' files/usr/bin/bluetooth_spp_manager.sh
 grep -Fq '/etc/init.d/bluetoothd start' files/usr/bin/bluetooth_spp_manager.sh
@@ -94,6 +97,8 @@ grep -Fq 'rfcomm -i hci0 connect' files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq "SCAN_COMMAND='scan bredr'" files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq "printf '%s\\n' \"\$SCAN_COMMAND\"" files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq 'emit_vci_status()' files/usr/bin/usb_console_debug.sh
+grep -Fq 'emit_sta_status()' files/usr/bin/usb_console_debug.sh
+grep -Fq 'sta status' files/usr/bin/usb_console_debug.sh
 grep -Fq 'vci target=' files/usr/bin/usb_console_debug.sh
 grep -Fq 'vci rfcomm' files/usr/bin/usb_console_debug.sh
 grep -Fq '/tmp/rfcomm_a30m_sdp.log' files/usr/bin/usb_console_debug.sh
