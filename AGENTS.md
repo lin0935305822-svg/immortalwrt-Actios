@@ -13,9 +13,13 @@ They are release requirements, not suggestions.
 4. All custom init, UCI-default, hotplug, user-bin, user-sbin, and CGI scripts
    must be executable in the final rootfs. A source edit is not accepted until
    the Actions image gate proves this.
-5. Do not publish or flash firmware until source checks, image checks, and
-   physical acceptance pass. Physical acceptance requires CDC ACM diagnostics,
-   STA connectivity, `hci0`, `bluetoothd`, A30M pairing, SDP, and RFCOMM.
+5. Production publication or production-device flashing requires source checks,
+   image checks, and physical acceptance. Physical acceptance requires CDC ACM
+   diagnostics, STA connectivity, `hci0`, `bluetoothd`, A30M pairing, SDP, and
+   RFCOMM. A user-authorized development-test flash may proceed without
+   production authority, independent review, or a production acceptance record
+   only after release provenance and image hashes are verified, using a reviewed
+   boot/rootfs-only procedure, followed by recorded CDC/STA/Bluetooth results.
 6. Never erase or write EFS, calibration, `modemst1`, `modemst2`, `fsc`, or
    `fsg`. Normal firmware flashing writes only `boot` and `rootfs`.
 7. Do not treat a successful compiler exit as a release result. The release
