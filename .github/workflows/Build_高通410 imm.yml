@@ -212,8 +212,9 @@ jobs:
 
     - name: Verify SVCI source release contract
       run: |
-        cd openwrt
-        /bin/sh $GITHUB_WORKSPACE/scripts/verify_svci_ufi003_release.sh .
+        /bin/sh "$GITHUB_WORKSPACE/scripts/verify_svci_ufi003_release.sh" \
+          --control-root "$GITHUB_WORKSPACE" \
+          --rootfs-root "$GITHUB_WORKSPACE/openwrt"
 
     - name: Install extra packages
       if: ${{ inputs.extra_packages != '' }}
