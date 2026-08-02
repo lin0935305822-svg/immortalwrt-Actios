@@ -136,6 +136,9 @@ grep -Fq '/etc/init.d/uhttpd restart' files/etc/uci-defaults/99-modem-led-status
 grep -Fq '/etc/init.d/obdclaw_uhttpd_watchdog enable' files/etc/uci-defaults/99-modem-led-status
 grep -Fq 'Status: 404 Not Found' files/www/cgi-bin/obdclaw-debug.cgi
 grep -Fq "firewall.wifi_sta_control.name='wifi_sta'" files/etc/uci-defaults/92-obdclaw-tls-firewall
+grep -Fq "firewall.obdclaw_dev_sidecar_ssh.src='wifi_sta'" files/etc/uci-defaults/92-obdclaw-tls-firewall
+grep -Fq "firewall.obdclaw_dev_sidecar_ssh.src_ip='192.168.0.0/24'" files/etc/uci-defaults/92-obdclaw-tls-firewall
+grep -Fq "firewall.obdclaw_dev_sidecar_ssh.dest_port='22'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_tls_control.src_ip='192.168.0.0/24'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_tls_control.dest_port='8443'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_tls_control.target='ACCEPT'" files/etc/uci-defaults/92-obdclaw-tls-firewall
