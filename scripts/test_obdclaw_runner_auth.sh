@@ -56,8 +56,10 @@ expired="$(make_envelope session-b $((now - 1)) nonce-b)"
 response="$(call "envelope=$expired&action=OPEN_SESSION")"
 printf '%s' "$response" | grep -Fq '"error":"expired-envelope"'
 
-last_char="${valid#${valid%?}}"
-case "$last_char" in A) invalid="${valid%?}B";; *) invalid="${valid%?}A";; esac
+# Do not mutate a Base64URL padding bit: for a 64-byte Ed25519 signature that
+# can decode to the same bytes. Keep the signature and alter signed content.
+signature="${valid##*.}"
+invalid="v2.${device}.session-invalid.$((now + 60)).nonce-a.runner.${signature}"
 response="$(call "envelope=$invalid&action=OPEN_SESSION")"
 printf '%s' "$response" | grep -Fq '"error":"invalid-signature"'
 
