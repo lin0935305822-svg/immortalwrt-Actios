@@ -3,6 +3,9 @@
 set -eu
 
 root="${1:-.}"
+if [ "$root" = '--rootfs-root' ]; then
+    root="${2:?missing rootfs root}"
+fi
 wireless="$root/files/etc/config/wireless"
 network="$root/files/etc/config/network"
 

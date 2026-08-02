@@ -9,7 +9,7 @@ workflow='.github/workflows/Build_高通410 imm.yml'
 [ -f "$workflow" ] || { echo "missing 410 workflow: $workflow" >&2; exit 1; }
 
 require_text() {
-    grep -Fq "$1" "$workflow" || {
+    grep -Fq -- "$1" "$workflow" || {
         echo "410 workflow policy missing: $1" >&2
         exit 1
     }
@@ -24,6 +24,8 @@ fi
 
 require_text 'TZ: Asia/Shanghai'
 require_text '/bin/sh ./scripts/run_ufi003_preflight.sh .'
+require_text '--control-root "$GITHUB_WORKSPACE"'
+require_text '--rootfs-root "$GITHUB_WORKSPACE/openwrt"'
 require_text 'Build time zone: $TZ'
 require_text 'svci-release-provenance.v1'
 require_text 'sourceCommit'
@@ -36,6 +38,7 @@ for script in \
     './scripts/test_obdclaw_local_control.sh .' \
     './scripts/test_obdclaw_runner_auth.sh .' \
     './scripts/test_obdclaw_runner_authority_install.sh .' \
+    './scripts/test_svci_ufi003_source_stage.sh .' \
     './scripts/verify_svci_ufi003_release.sh .'; do
     grep -Fq "$script" scripts/run_ufi003_preflight.sh || {
         echo "unified preflight is missing: $script" >&2
