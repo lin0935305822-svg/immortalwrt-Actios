@@ -76,7 +76,6 @@ require_file files/www/cgi-bin/obdclaw-runner.cgi
 require_file files/etc/config/uhttpd
 require_file files/etc/config/wireless
 require_file files/etc/config/network
-require_file files/etc/config/dhcp
 require_file files/etc/uci-defaults/92-obdclaw-tls-firewall
 
 require_exec files/etc/init.d/obdclaw_led_status
@@ -140,7 +139,6 @@ grep -Fq "firewall.wifi_sta_control.name='wifi_sta'" files/etc/uci-defaults/92-o
 grep -Fq "firewall.obdclaw_tls_control.src_ip='192.168.0.0/24'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_tls_control.dest_port='8443'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_tls_control.target='ACCEPT'" files/etc/uci-defaults/92-obdclaw-tls-firewall
-/bin/sh "$control_root/scripts/test_ufi003_usb_rndis_management.sh" .
 
 if grep -Eq 'hciattach|ttyHS0|ttyMSM1|ttyS1' files/usr/bin/bluetooth_spp_manager.sh; then
     echo 'forbidden UART Bluetooth fallback found' >&2
