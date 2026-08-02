@@ -11,6 +11,7 @@ cd "$root"
 /bin/sh ./scripts/test_obdclaw_local_control.sh .
 /bin/sh ./scripts/test_obdclaw_runner_auth.sh .
 /bin/sh ./scripts/test_obdclaw_runner_authority_install.sh .
+/bin/sh ./scripts/test_svci_ufi003_source_stage.sh .
 /bin/sh ./scripts/verify_svci_ufi003_release.sh .
 
 echo 'SVCI UFI003 unified preflight passed.'

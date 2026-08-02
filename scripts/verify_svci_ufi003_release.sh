@@ -3,6 +3,7 @@
 set -eu
 
 root="${1:-.}"
+script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 cd "$root"
 
 require_file() {
@@ -87,7 +88,7 @@ grep -Fq 'set_timer "$red" 700 700' files/usr/sbin/obdclaw_led_status
 grep -Fq 'set_timer "$red" 120 120' files/usr/sbin/obdclaw_led_status
 grep -Fq 'set_timer "$blue" 120 120' files/usr/sbin/obdclaw_led_status
 grep -Fq 'set_timer "$blue" 1000 1000' files/usr/sbin/obdclaw_led_status
-/bin/sh ./scripts/verify_ufi003_sta_profile.sh .
+/bin/sh "$script_dir/verify_ufi003_sta_profile.sh" .
 grep -Fq 'modprobe btqca' files/usr/bin/bluetooth_spp_manager.sh
 grep -Fq 'modprobe btqcomsmd' files/usr/bin/bluetooth_spp_manager.sh
 grep -Fq '/etc/init.d/bluetoothd start' files/usr/bin/bluetooth_spp_manager.sh
