@@ -141,7 +141,9 @@ grep -Fq "firewall.obdclaw_dev_sidecar_ssh.src_ip='192.168.0.0/24'" files/etc/uc
 grep -Fq "firewall.obdclaw_dev_sidecar_ssh.dest_port='22'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "uci set dropbear.@dropbear[0].enable='1'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "uci set dropbear.@dropbear[0].Port='22'" files/etc/uci-defaults/92-obdclaw-tls-firewall
-grep -Fq '/etc/init.d/dropbear enable' files/etc/uci-defaults/92-obdclaw-tls-firewallgrep -Fq "firewall.obdclaw_tls_control.src_ip='192.168.0.0/24'" files/etc/uci-defaults/92-obdclaw-tls-firewall
+grep -Fq '/etc/init.d/dropbear enable' files/etc/uci-defaults/92-obdclaw-tls-firewall
+grep -Fq '/etc/init.d/dropbear restart' files/etc/uci-defaults/92-obdclaw-tls-firewall
+grep -Fq "firewall.obdclaw_tls_control.src_ip='192.168.0.0/24'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_tls_control.dest_port='8443'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_tls_control.target='ACCEPT'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 

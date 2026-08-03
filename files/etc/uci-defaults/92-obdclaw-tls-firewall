@@ -20,6 +20,7 @@ if command -v uci >/dev/null 2>&1 && [ -f /etc/config/firewall ]; then
         uci set dropbear.@dropbear[0].Port='22'
         uci commit dropbear
         /etc/init.d/dropbear enable
+        /etc/init.d/dropbear restart
     fi
     # Development sidecar validation uses the existing hash-verifying SSH
     # deployer on the trusted TP-LINK test LAN.  This is deliberately scoped

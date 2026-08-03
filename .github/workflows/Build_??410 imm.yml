@@ -389,6 +389,7 @@ jobs:
         require_rootfs_exec /usr/bin/openssl
         require_rootfs_exec /usr/sbin/uhttpd
         require_rootfs_exec /usr/sbin/dropbear
+        require_rootfs_exec /etc/init.d/dropbear
         require_rootfs_exec /usr/bin/rfcomm
         require_rootfs_exec /usr/bin/bluetoothctl
         require_rootfs_exec /usr/bin/sdptool
