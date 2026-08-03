@@ -18,6 +18,8 @@ if command -v uci >/dev/null 2>&1 && [ -f /etc/config/firewall ]; then
         uci -q get dropbear.@dropbear[0] >/dev/null 2>&1 || uci add dropbear dropbear >/dev/null
         uci set dropbear.@dropbear[0].enable='1'
         uci set dropbear.@dropbear[0].Port='22'
+        uci -q delete dropbear.@dropbear[0].Interface
+        uci add_list dropbear.@dropbear[0].Interface='wifi_sta'
         uci commit dropbear
         /etc/init.d/dropbear enable
         /etc/init.d/dropbear restart
