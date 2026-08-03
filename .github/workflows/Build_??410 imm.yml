@@ -388,6 +388,7 @@ jobs:
         done < <(find files/etc/init.d files/etc/uci-defaults files/etc/hotplug.d files/usr/bin files/usr/sbin files/www/cgi-bin -type f -printf '%p\n' | sort)
         require_rootfs_exec /usr/bin/openssl
         require_rootfs_exec /usr/sbin/uhttpd
+        require_rootfs_exec /usr/sbin/dropbear
         require_rootfs_exec /usr/bin/rfcomm
         require_rootfs_exec /usr/bin/bluetoothctl
         require_rootfs_exec /usr/bin/sdptool

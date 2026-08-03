@@ -139,7 +139,6 @@ grep -Fq "firewall.wifi_sta_control.name='wifi_sta'" files/etc/uci-defaults/92-o
 grep -Fq "firewall.obdclaw_dev_sidecar_ssh.src='wifi_sta'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_dev_sidecar_ssh.src_ip='192.168.0.0/24'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_dev_sidecar_ssh.dest_port='22'" files/etc/uci-defaults/92-obdclaw-tls-firewall
-grep -Fq "CONFIG_DEFAULT_dropbear=y" "$control_root/config/ufi003.config"
 grep -Fq "uci set dropbear.@dropbear[0].enable='1'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "uci set dropbear.@dropbear[0].Port='22'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq '/etc/init.d/dropbear enable' files/etc/uci-defaults/92-obdclaw-tls-firewallgrep -Fq "firewall.obdclaw_tls_control.src_ip='192.168.0.0/24'" files/etc/uci-defaults/92-obdclaw-tls-firewall

@@ -26,3 +26,5 @@ awk '
   }
   END { exit failed }
 ' "$config_file"
+
+grep -Fx 'CONFIG_PACKAGE_dropbear=y' "$config_file"
