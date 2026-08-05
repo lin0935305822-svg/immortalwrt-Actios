@@ -26,13 +26,10 @@ emit_vci_status() {
 }
 
 emit_sta_status() {
-    status="$(ubus call network.interface.wifi_sta status 2>/dev/null || true)"
-    if [ -n "$status" ]; then
-        printf '%s\n' "$status" | tr '\n' ' ' | sed 's/[[:space:]][[:space:]]*/ /g' | \
-            while IFS= read -r line; do emit "sta status $line"; done
-    else
-        emit 'sta status unavailable'
-    fi
+    status="$(ubus call network.interface.wifi_sta status 2>/dev/null)"
+    status_rc=$?
+    compact_status="$(printf '%s' "$status" | tr '\n' ' ' | sed 's/[[:space:]][[:space:]]*/ /g')"
+    emit "sta status rc=$status_rc ${compact_status:-unavailable}"
 }
 
 snapshot() {

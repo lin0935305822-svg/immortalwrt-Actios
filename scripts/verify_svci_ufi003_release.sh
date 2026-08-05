@@ -68,6 +68,7 @@ require_file files/usr/bin/bluetooth_spp_manager.sh
 require_file files/usr/bin/rfcomm_a30m_bind.sh
 require_file files/usr/bin/obdclaw_bt_coex_test.sh
 require_file files/usr/bin/usb_console_debug.sh
+require_file files/usr/bin/sta_dhcp_recover.sh
 require_file files/usr/bin/obdclaw_local_control_setup.sh
 require_file files/usr/bin/obdclaw_runner_authority_install.sh
 require_file files/www/cgi-bin/obdclaw-device-identity.cgi
@@ -86,6 +87,8 @@ require_exec files/usr/sbin/obdclaw_led_status
 require_exec files/usr/bin/bluetooth_spp_manager.sh
 require_exec files/usr/bin/rfcomm_a30m_bind.sh
 require_exec files/usr/bin/usb_console_debug.sh
+require_exec files/usr/bin/sta_dhcp_recover.sh
+require_exec files/etc/init.d/sta_dhcp_recover
 require_exec files/etc/init.d/obdclaw_local_control
 require_exec files/etc/init.d/obdclaw_uhttpd_watchdog
 require_exec files/etc/uci-defaults/92-obdclaw-tls-firewall
@@ -111,6 +114,17 @@ grep -Fq "printf '%s\\n' \"\$SCAN_COMMAND\"" files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq 'emit_vci_status()' files/usr/bin/usb_console_debug.sh
 grep -Fq 'emit_sta_status()' files/usr/bin/usb_console_debug.sh
 grep -Fq 'sta status' files/usr/bin/usb_console_debug.sh
+grep -Fq 'sta status rc=' files/usr/bin/usb_console_debug.sh
+grep -Fq "INTERFACE='wifi_sta'" files/usr/bin/sta_dhcp_recover.sh
+grep -Fq "WIRELESS_DEVICE='phy0-sta0'" files/usr/bin/sta_dhcp_recover.sh
+grep -Fq 'MAX_WAIT_SECONDS=45' files/usr/bin/sta_dhcp_recover.sh
+grep -Fq 'ifdown "$INTERFACE"' files/usr/bin/sta_dhcp_recover.sh
+grep -Fq 'ifup "$INTERFACE"' files/usr/bin/sta_dhcp_recover.sh
+grep -Fq 'no further retries this boot' files/usr/bin/sta_dhcp_recover.sh
+if grep -Eq '(^|[^[:alnum:]_])wifi[[:space:]]+(down|reload)|ifdown[[:space:]]+wifi_sta' files/usr/bin/sta_dhcp_recover.sh; then
+    echo 'STA recovery must not perform a global wireless reset' >&2
+    exit 1
+fi
 grep -Fq 'vci target=' files/usr/bin/usb_console_debug.sh
 grep -Fq 'vci rfcomm' files/usr/bin/usb_console_debug.sh
 grep -Fq '/tmp/rfcomm_a30m_sdp.log' files/usr/bin/usb_console_debug.sh
