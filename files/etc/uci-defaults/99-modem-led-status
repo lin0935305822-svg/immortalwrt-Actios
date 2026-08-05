@@ -33,6 +33,7 @@ fi
 
 # 5. 确保蓝牙 SPP 与 A30M RFCOMM 绑定服务启用
 chmod 0755 /usr/bin/bluetooth_spp_manager.sh /usr/bin/rfcomm_a30m_bind.sh /etc/init.d/bluetooth_spp_service /etc/init.d/rfcomm_a30m /usr/bin/obdclaw_local_control_setup.sh /etc/init.d/obdclaw_local_control 2>/dev/null || true
+chmod 0755 /www/cgi-bin/obdclaw-410.cgi /www/cgi-bin/obdclaw-runner.cgi 2>/dev/null || true
 if [ -f /etc/init.d/bluetooth_spp_service ]; then
     /etc/init.d/bluetooth_spp_service enable >/dev/null 2>&1 || true
 fi
