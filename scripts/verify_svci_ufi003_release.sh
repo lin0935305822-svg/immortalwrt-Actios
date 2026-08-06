@@ -118,11 +118,14 @@ grep -Fq 'sta status rc=' files/usr/bin/usb_console_debug.sh
 grep -Fq "INTERFACE='wifi_sta'" files/usr/bin/sta_dhcp_recover.sh
 grep -Fq "WIRELESS_DEVICE='phy0-sta0'" files/usr/bin/sta_dhcp_recover.sh
 grep -Fq 'MAX_WAIT_SECONDS=45' files/usr/bin/sta_dhcp_recover.sh
-grep -Fq 'ifdown "$INTERFACE"' files/usr/bin/sta_dhcp_recover.sh
 grep -Fq 'ifup "$INTERFACE"' files/usr/bin/sta_dhcp_recover.sh
 grep -Fq 'no further retries this boot' files/usr/bin/sta_dhcp_recover.sh
-if grep -Eq '(^|[^[:alnum:]_])wifi[[:space:]]+(down|reload)|ifdown[[:space:]]+wifi_sta' files/usr/bin/sta_dhcp_recover.sh; then
-    echo 'STA recovery must not perform a global wireless reset' >&2
+if grep -Eq '(^|[^[:alnum:]_])wifi[[:space:]]+(down|reload)|ifdown' files/usr/bin/sta_dhcp_recover.sh; then
+    echo 'STA recovery must not tear down a wireless interface' >&2
+    exit 1
+fi
+if grep -Eq 'respawn|procd_' files/etc/init.d/sta_dhcp_recover; then
+    echo 'STA recovery init service must be one-shot and must not respawn' >&2
     exit 1
 fi
 grep -Fq 'vci target=' files/usr/bin/usb_console_debug.sh

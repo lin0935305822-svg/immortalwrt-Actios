@@ -48,9 +48,7 @@ if has_ipv4; then
     exit 0
 fi
 
-log 'STA is associated but has no IPv4 lease; performing one interface DHCP recovery.'
-ifdown "$INTERFACE"
-sleep 2
+log 'STA is associated but has no IPv4 lease; requesting one DHCP interface bring-up.'
 ifup "$INTERFACE"
 sleep "$POLL_SECONDS"
 
