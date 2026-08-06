@@ -55,9 +55,16 @@ run_case() {
     [ "$actual" = "$expected" ] || { echo "$name: unexpected recovery commands: $actual" >&2; exit 1; }
 }
 
-run_case associated_without_lease 1 0 'ifdown wifi_sta
-ifup wifi_sta'
+run_case associated_without_lease 1 0 'ifup wifi_sta'
 run_case associated_with_lease 1 1 ''
 run_case unassociated 0 0 ''
+
+init_script="$root/files/etc/init.d/sta_dhcp_recover"
+[ -x "$init_script" ] || { echo "STA recovery init script is not executable" >&2; exit 1; }
+grep -Fq '/bin/sh /usr/bin/sta_dhcp_recover.sh' "$init_script"
+if grep -Eq 'respawn|procd_' "$init_script"; then
+    echo 'STA recovery init script must be one-shot and must not respawn' >&2
+    exit 1
+fi
 
 echo 'STA DHCP recovery tests passed.'
