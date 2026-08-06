@@ -15,7 +15,7 @@ reply() { printf 'Content-Type: application/json\r\nCache-Control: no-store\r\n\
 safe_id() { case "$1" in ''|*[!A-Za-z0-9_-]*) return 1;; esac; [ "${#1}" -le 128 ]; }
 valid_number() { case "$1" in ''|*[!0-9]*) return 1;; esac; return 0; }
 auth_now() { "$AUTH_CLOCK"; }
-new_session_id() { od -An -N16 -tx1 /dev/urandom | tr -d ' \n'; }
+new_session_id() { openssl rand -hex 16; }
 
 wifi_state() { ubus call network.interface.wifi_sta status 2>/dev/null | grep -q '"up": true' && printf up || printf down; }
 rfcomm_state() { rfcomm -a 2>/dev/null | grep -q 'rfcomm0:.*connected' && printf connected || printf disconnected; }
@@ -25,11 +25,15 @@ frame_reply() {
     printf '{"protocol":"obdclaw.runner-ui.v1","sessionId":"%s","nativeFrameId":"platform-status","sequence":%s,"shareSeq":%s,"shareType":0,"layout":"MSG","title":"410 Platform Link","rows":[{"Wi-Fi STA":"%s","VCI RFCOMM":"%s","Vehicle diagnostics":"Not available until a verified native protocol is installed"}],"controls":[{"id":"refresh","label":"Refresh link state","nativeSelection":1},{"id":"cancel","label":"End local session","nativeSelection":0}]}' "$1" "$2" "$2" "$(wifi_state)" "$(rfcomm_state)"
 }
 native_frame_reply() {
+    sequence="$1"
     [ -s "$NATIVE_FRAME_FILE" ] || return 1
     frame_size="$(wc -c <"$NATIVE_FRAME_FILE" 2>/dev/null || true)"
     valid_number "$frame_size" && [ "$frame_size" -gt 1 ] && [ "$frame_size" -le "$MAX_BODY" ] || return 1
     grep -q '"cmd":"UI_INIT"' "$NATIVE_FRAME_FILE" 2>/dev/null || return 1
-    cat "$NATIVE_FRAME_FILE"
+    # The native Runner may keep its own seq stable while waiting for a reply.
+    # Bind every delivery to the local session sequence so the APK can reject
+    # replays without rejecting a legitimate re-render of that native frame.
+    sed "s/\"seq\":[0-9][0-9]*/\"seq\":$sequence/" "$NATIVE_FRAME_FILE"
 }
 
 [ "${REQUEST_METHOD:-}" = POST ] || reply '{"ok":false,"error":"method-not-allowed"}'
@@ -69,7 +73,7 @@ else
             CANCEL) rm -f "$session_file"; reply '{"ok":true,"cancelled":true}' ;;
             NEXT_FRAME)
                 sequence=$((sequence + 1)); printf '%s\n%s\n' "$expires_at" "$sequence" >"$session_file"
-                reply "$(native_frame_reply || frame_reply "$session_id" "$sequence")"
+                reply "$(native_frame_reply "$sequence" || frame_reply "$session_id" "$sequence")"
                 ;;
             UI_SELECT)
                 native_frame_id="${body#*nativeFrameId=}"; native_frame_id="${native_frame_id%%&*}"
@@ -82,7 +86,7 @@ else
                     actual_share_type="$(sed -n 's/.*"shareType":"\([A-Za-z0-9_]*\)".*/\1/p' "$NATIVE_FRAME_FILE" | head -n 1)"
                     safe_id "$actual_frame_id" && valid_number "$actual_share_seq" && safe_id "$actual_share_type" && valid_number "$selection" || reply '{"ok":false,"error":"invalid-native-frame"}'
                     [ "$native_frame_id" = "$actual_frame_id" ] && [ "$share_seq" = "$actual_share_seq" ] || reply '{"ok":false,"error":"stale-frame"}'
-                    grep -q "\"nativeSelection\":$selection" "$NATIVE_FRAME_FILE" 2>/dev/null || reply '{"ok":false,"error":"undeclared-control"}'
+                    grep -Eq "\"(nativeSelection|mask|key)\":$selection([^0-9]|$)" "$NATIVE_FRAME_FILE" 2>/dev/null || reply '{"ok":false,"error":"undeclared-control"}'
                     reply_file="${OBDCLAW_NATIVE_UI_REPLY_FILE:-/tmp/obdclaw-runner/tmp/native-ui-reply.json}"
                     reply_tmp="${reply_file}.tmp.$$"
                     printf '{"cmd":"NATIVE_SHARE_REPLY","nativeSelection":%s,"shareSeq":%s,"shareType":"%s","nativeFrameId":"%s"}' "$selection" "$actual_share_seq" "$actual_share_type" "$actual_frame_id" >"$reply_tmp"

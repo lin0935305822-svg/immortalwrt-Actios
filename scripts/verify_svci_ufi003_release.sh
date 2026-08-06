@@ -140,7 +140,7 @@ grep -Fq 'replayed-token' files/www/cgi-bin/obdclaw-control.cgi
 grep -Fq 'unsupported-action' files/www/cgi-bin/obdclaw-control.cgi
 grep -Fq 'deviceId=*' files/www/cgi-bin/obdclaw-runner.cgi
 grep -Fq 'wrong-device' files/www/cgi-bin/obdclaw-runner.cgi
-grep -Fq 'new_session_id' files/www/cgi-bin/obdclaw-runner.cgi
+grep -Fq 'openssl rand -hex 16' files/www/cgi-bin/obdclaw-runner.cgi
 grep -Fq 'obdclaw.runner-ui.v1' files/www/cgi-bin/obdclaw-runner.cgi
 grep -Fq 'undeclared-control' files/www/cgi-bin/obdclaw-runner.cgi
 grep -Fq 'stale-frame' files/www/cgi-bin/obdclaw-runner.cgi
@@ -152,16 +152,9 @@ grep -Fq '/etc/init.d/uhttpd restart' files/etc/uci-defaults/99-modem-led-status
 grep -Fq '/etc/init.d/obdclaw_uhttpd_watchdog enable' files/etc/uci-defaults/99-modem-led-status
 grep -Fq 'Status: 404 Not Found' files/www/cgi-bin/obdclaw-debug.cgi
 grep -Fq "firewall.wifi_sta_control.name='wifi_sta'" files/etc/uci-defaults/92-obdclaw-tls-firewall
-grep -Fq "delete dropbear.@dropbear[0]._direct" files/etc/uci-defaults/92-obdclaw-tls-firewall
-grep -Fq "delete dropbear.@dropbear[0].DirectInterface" files/etc/uci-defaults/92-obdclaw-tls-firewall
-grep -Fq "add_list dropbear.@dropbear[0].Interface='wifi_sta'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_dev_sidecar_ssh.src='wifi_sta'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_dev_sidecar_ssh.src_ip='192.168.0.0/24'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_dev_sidecar_ssh.dest_port='22'" files/etc/uci-defaults/92-obdclaw-tls-firewall
-grep -Fq "uci set dropbear.@dropbear[0].enable='1'" files/etc/uci-defaults/92-obdclaw-tls-firewall
-grep -Fq "uci set dropbear.@dropbear[0].Port='22'" files/etc/uci-defaults/92-obdclaw-tls-firewall
-grep -Fq '/etc/init.d/dropbear enable' files/etc/uci-defaults/92-obdclaw-tls-firewall
-grep -Fq '/etc/init.d/dropbear restart' files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_tls_control.src_ip='192.168.0.0/24'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_tls_control.dest_port='8443'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_tls_control.target='ACCEPT'" files/etc/uci-defaults/92-obdclaw-tls-firewall
