@@ -15,7 +15,7 @@ reply() { printf 'Content-Type: application/json\r\nCache-Control: no-store\r\n\
 safe_id() { case "$1" in ''|*[!A-Za-z0-9_-]*) return 1;; esac; [ "${#1}" -le 128 ]; }
 valid_number() { case "$1" in ''|*[!0-9]*) return 1;; esac; return 0; }
 auth_now() { "$AUTH_CLOCK"; }
-new_session_id() { openssl rand -hex 16; }
+new_session_id() { tr -d '-' </proc/sys/kernel/random/uuid; }
 
 wifi_state() { ubus call network.interface.wifi_sta status 2>/dev/null | grep -q '"up": true' && printf up || printf down; }
 rfcomm_state() { rfcomm -a 2>/dev/null | grep -q 'rfcomm0:.*connected' && printf connected || printf disconnected; }
