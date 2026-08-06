@@ -18,7 +18,8 @@ call() {
     body="$1"
     printf '%s' "$body" | REQUEST_METHOD=POST CONTENT_LENGTH="${#body}" \
         OBDCLAW_CONTROL_STATE_DIR="$state" \
-        OBDCLAW_RUNNER_SESSION_DIR="$tmp/sessions" OBDCLAW_AUTH_CLOCK="$clock" "$runner"
+        OBDCLAW_RUNNER_SESSION_DIR="$tmp/sessions" OBDCLAW_AUTH_CLOCK="$clock" \
+        OBDCLAW_NATIVE_UI_FRAME_FILE="$tmp/no-native-ui.json" "$runner"
 }
 
 response="$(call "deviceId=$device&action=OPEN_SESSION")"
