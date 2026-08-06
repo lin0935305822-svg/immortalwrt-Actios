@@ -140,7 +140,7 @@ grep -Fq 'replayed-token' files/www/cgi-bin/obdclaw-control.cgi
 grep -Fq 'unsupported-action' files/www/cgi-bin/obdclaw-control.cgi
 grep -Fq 'deviceId=*' files/www/cgi-bin/obdclaw-runner.cgi
 grep -Fq 'wrong-device' files/www/cgi-bin/obdclaw-runner.cgi
-grep -Fq 'openssl rand -hex 16' files/www/cgi-bin/obdclaw-runner.cgi
+grep -Fq "tr -d '-' </proc/sys/kernel/random/uuid" files/www/cgi-bin/obdclaw-runner.cgi
 grep -Fq 'obdclaw.runner-ui.v1' files/www/cgi-bin/obdclaw-runner.cgi
 grep -Fq 'undeclared-control' files/www/cgi-bin/obdclaw-runner.cgi
 grep -Fq 'stale-frame' files/www/cgi-bin/obdclaw-runner.cgi
