@@ -11,6 +11,18 @@ if command -v uci >/dev/null 2>&1 && [ -f /etc/config/firewall ]; then
     uci set firewall.wifi_sta_control.output='ACCEPT'
     uci set firewall.wifi_sta_control.forward='REJECT'
 
+    # Development sidecar validation uses the existing hash-verifying SSH
+    # deployer on the trusted TP-LINK test LAN.  This is deliberately scoped
+    # to that LAN and does not relax the station zone's default input policy.
+    uci -q delete firewall.obdclaw_dev_sidecar_ssh
+    uci set firewall.obdclaw_dev_sidecar_ssh='rule'
+    uci set firewall.obdclaw_dev_sidecar_ssh.name='Allow-Development-Sidecar-SSH'
+    uci set firewall.obdclaw_dev_sidecar_ssh.src='wifi_sta'
+    uci set firewall.obdclaw_dev_sidecar_ssh.src_ip='192.168.0.0/24'
+    uci set firewall.obdclaw_dev_sidecar_ssh.proto='tcp'
+    uci set firewall.obdclaw_dev_sidecar_ssh.dest_port='22'
+    uci set firewall.obdclaw_dev_sidecar_ssh.target='ACCEPT'
+
     uci -q delete firewall.obdclaw_tls_control
     uci set firewall.obdclaw_tls_control='rule'
     uci set firewall.obdclaw_tls_control.name='Allow-OBDclaw-TLS-Control'
