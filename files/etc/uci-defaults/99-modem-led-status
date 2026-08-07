@@ -57,4 +57,11 @@ if [ -f /etc/init.d/obdclaw_uhttpd_watchdog ]; then
     /etc/init.d/obdclaw_uhttpd_watchdog start >/dev/null 2>&1 || true
 fi
 
+# 6. 开机自动将只读的诊断核心拷贝到内存临时路径 /tmp/obdclaw-runner
+if [ -d /usr/share/obdclaw-runner ]; then
+    mkdir -p /tmp/obdclaw-runner
+    cp -r /usr/share/obdclaw-runner/* /tmp/obdclaw-runner/ 2>/dev/null || true
+    chmod -R 0755 /tmp/obdclaw-runner/bin/ 2>/dev/null || true
+fi
+
 exit 0
