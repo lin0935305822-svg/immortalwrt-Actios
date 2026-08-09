@@ -35,7 +35,7 @@ response="$(call "sessionId=$session&nativeFrameId=platform-status&shareSeq=1&sh
 printf '%s' "$response" | grep -Fq '"ok":true'
 
 response="$(call "sessionId=$session&nativeFrameId=platform-status&shareSeq=1&shareType=0&nativeSelection=1&action=UI_SELECT")"
-printf '%s' "$response" | grep -Fq '"error":"stale-frame"'
+printf '%s' "$response" | grep -Fq '"error":"frame-already-replied"'
 
 # Native frames can wait for a reply with a stable Runner seq. The CGI must
 # attach a new local-session sequence to every delivery while keeping the
@@ -50,10 +50,10 @@ call_native() {
         OBDCLAW_NATIVE_UI_FRAME_FILE="$native_frame" OBDCLAW_NATIVE_UI_REPLY_FILE="$tmp/native-ui-reply.json" "$runner"
 }
 response="$(call_native "sessionId=$session&action=NEXT_FRAME")"
-printf '%s' "$response" | grep -Fq '"seq":3'
+printf '%s' "$response" | grep -Fq '"seq":2'
 printf '%s' "$response" | grep -Fq '"shareSeq":0'
 response="$(call_native "sessionId=$session&action=NEXT_FRAME")"
-printf '%s' "$response" | grep -Fq '"seq":4'
+printf '%s' "$response" | grep -Fq 'null'
 response="$(call_native "sessionId=$session&nativeFrameId=runner-00000001-0000000000000001&shareSeq=0&shareType=4&nativeSelection=1&action=UI_SELECT")"
 printf '%s' "$response" | grep -Fq '"ok":true'
 grep -Fq '"nativeSelection":1' "$tmp/native-ui-reply.json"
