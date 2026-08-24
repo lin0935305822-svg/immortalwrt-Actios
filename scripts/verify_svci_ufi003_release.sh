@@ -108,7 +108,8 @@ grep -Fq 'modprobe btqcomsmd' files/usr/bin/bluetooth_spp_manager.sh
 grep -Fq '/etc/init.d/bluetoothd start' files/usr/bin/bluetooth_spp_manager.sh
 grep -Fq 'Pairing successful' files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq 'sdptool browse' files/usr/bin/rfcomm_a30m_bind.sh
-grep -Fq 'rfcomm -i hci0 connect' files/usr/bin/rfcomm_a30m_bind.sh
+grep -Fq 'rfcomm -i hci0 bind' files/usr/bin/rfcomm_a30m_bind.sh
+grep -Fq "LOCK_DIR='/tmp/rfcomm_a30m.lock'" files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq "SCAN_COMMAND='scan bredr'" files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq "printf '%s\\n' \"\$SCAN_COMMAND\"" files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq 'emit_vci_status()' files/usr/bin/usb_console_debug.sh

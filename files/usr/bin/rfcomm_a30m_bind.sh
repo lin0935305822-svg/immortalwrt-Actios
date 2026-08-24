@@ -2,6 +2,28 @@
 # Discover, pair, and connect an A30M Classic SPP device.
 
 LOG_TAG='rfcomm_a30m'
+LOCK_DIR='/tmp/rfcomm_a30m.lock'
+
+# procd restart plus manual maintenance starts must never create competing
+# RFCOMM managers. The lock is scoped to this daemon and safely reclaimed when
+# its recorded PID is no longer alive.
+acquire_lock() {
+    if mkdir "$LOCK_DIR" 2>/dev/null; then
+        echo "$$" > "$LOCK_DIR/pid"
+        trap 'rm -rf "$LOCK_DIR"' EXIT INT TERM
+        return 0
+    fi
+    old_pid="$(cat "$LOCK_DIR/pid" 2>/dev/null || true)"
+    case "$old_pid" in
+        ''|*[!0-9]*) rm -rf "$LOCK_DIR" 2>/dev/null || true ;;
+        *) kill -0 "$old_pid" 2>/dev/null && exit 0; rm -rf "$LOCK_DIR" 2>/dev/null || true ;;
+    esac
+    mkdir "$LOCK_DIR" 2>/dev/null || exit 0
+    echo "$$" > "$LOCK_DIR/pid"
+    trap 'rm -rf "$LOCK_DIR"' EXIT INT TERM
+}
+
+acquire_lock
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$LOG_TAG] $*" | tee -a /tmp/rfcomm_a30m.log >&2
@@ -36,7 +58,10 @@ scan_for_a30m() {
 }
 
 is_connected() {
-    rfcomm -a 2>/dev/null | grep -q "rfcomm${RFCOMM_DEV_INDEX}.*connected"
+    # `connect` leaves a foreground rfcomm process holding the TTY.  The
+    # diagnostic broker must be the only reader, so production uses `bind`;
+    # BlueZ reports that kernel-owned DLC as `clean`.
+    rfcomm -a 2>/dev/null | grep -Eq "rfcomm${RFCOMM_DEV_INDEX}.*(connected|clean)"
 }
 
 is_paired() {
@@ -140,25 +165,21 @@ connect_spp() {
     esac
 
     : > /tmp/rfcomm_a30m_connect.log
-    log "Opening insecure RFCOMM SPP connection $RFCOMM_NODE -> $mac (SDP channel $rfcomm_channel)."
+    log "Binding insecure RFCOMM SPP connection $RFCOMM_NODE -> $mac (SDP channel $rfcomm_channel)."
     rfcomm release "$RFCOMM_DEV_INDEX" >/dev/null 2>&1 || true
     sleep 1
-    # Match CloudDiag's createInsecureRfcommSocketToServiceRecord path.
-    rfcomm -i hci0 connect "$RFCOMM_NODE" "$mac" "$rfcomm_channel" >>/tmp/rfcomm_a30m_connect.log 2>&1 &
-    connect_pid=$!
-    sleep 5
+    # `rfcomm connect` owns the TTY in a long-lived foreground process.  That
+    # competes with the broker and can consume VCI replies.  `bind` keeps the
+    # kernel DLC alive without a second userspace reader.
+    if ! rfcomm -i hci0 bind "$RFCOMM_NODE" "$mac" "$rfcomm_channel" >>/tmp/rfcomm_a30m_connect.log 2>&1; then
+        log "RFCOMM bind failed for $mac on SDP channel $rfcomm_channel."
+        return 1
+    fi
+    sleep 2
 
     if is_connected; then
         log "SPP connection verified: $mac is connected on $RFCOMM_NODE."
         return 0
-    fi
-
-    # rfcomm connect remains in the foreground while it owns a transport.
-    # A failed pending attempt must be stopped before the next daemon cycle.
-    if kill -0 "$connect_pid" 2>/dev/null; then
-        log "RFCOMM is still pending after 5 seconds; stopping stale attempt."
-        kill "$connect_pid" 2>/dev/null || true
-        wait "$connect_pid" 2>/dev/null || true
     fi
 
     log "RFCOMM connection was not established for $mac on SDP channel $rfcomm_channel."

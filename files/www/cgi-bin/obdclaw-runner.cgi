@@ -8,9 +8,19 @@ STATE_DIR="${OBDCLAW_CONTROL_STATE_DIR:-/overlay/obdclaw/local-control}"
 DEVICE_ID_FILE="$STATE_DIR/device_id"
 SESSION_DIR="${OBDCLAW_RUNNER_SESSION_DIR:-/tmp/obdclaw-runner-sessions}"
 AUTH_CLOCK="${OBDCLAW_AUTH_CLOCK:-/usr/bin/obdclaw_auth_clock}"
-NATIVE_FRAME_FILE="${OBDCLAW_NATIVE_UI_FRAME_FILE:-/tmp/obdclaw-runner/tmp/native-ui.json}"
-NATIVE_REPLY_FILE="${OBDCLAW_NATIVE_UI_REPLY_FILE:-/tmp/obdclaw-runner/tmp/native-ui-reply.json}"
-MOBILE_RESOURCE_DIR="${OBDCLAW_MOBILE_RESOURCE_DIR:-/tmp/obdclaw-runner/tmp/mobile-resource}"
+# The packaged Runner normally writes under /usr/share. A verified sidecar
+# launched from /tmp uses its own handoff directory; follow it when present so
+# the APK cannot receive a stale frame from a previous runtime.
+if [ -n "${OBDCLAW_RUNNER_TMP_DIR:-}" ]; then
+    RUNNER_TMP_DIR="$OBDCLAW_RUNNER_TMP_DIR"
+elif [ -d /tmp/obdclaw-runner/tmp ]; then
+    RUNNER_TMP_DIR=/tmp/obdclaw-runner/tmp
+else
+    RUNNER_TMP_DIR=/tmp/obdclaw-runner/tmp
+fi
+NATIVE_FRAME_FILE="${OBDCLAW_NATIVE_UI_FRAME_FILE:-$RUNNER_TMP_DIR/native-ui.json}"
+NATIVE_REPLY_FILE="${OBDCLAW_NATIVE_UI_REPLY_FILE:-$RUNNER_TMP_DIR/native-ui-reply.json}"
+MOBILE_RESOURCE_DIR="${OBDCLAW_MOBILE_RESOURCE_DIR:-$RUNNER_TMP_DIR/mobile-resource}"
 MAX_REQUEST_BODY=98304
 MAX_NATIVE_FRAME=65536
 
@@ -24,10 +34,20 @@ safe_base64() { case "$1" in ''|*[!A-Za-z0-9+/=]*) return 1;; esac; [ "$((${#1} 
 valid_number() { case "$1" in ''|*[!0-9]*) return 1;; esac; return 0; }
 valid_hash() { case "$1" in *[!0-9A-Fa-f]*|'') return 1;; esac; [ "${#1}" -eq 64 ]; }
 auth_now() { "$AUTH_CLOCK"; }
-new_session_id() { tr -d '-' </proc/sys/kernel/random/uuid; }
+new_session_id() {
+    if [ -r /proc/sys/kernel/random/uuid ]; then
+        tr -d '-' </proc/sys/kernel/random/uuid
+        return
+    fi
+    # Keeps host-side CGI regression tests runnable without weakening OpenWrt's
+    # normal kernel UUID path.
+    od -An -N16 -tx1 /dev/urandom 2>/dev/null | tr -d ' \n'
+}
 
 wifi_state() { ubus call network.interface.wifi_sta status 2>/dev/null | grep -q '"up": true' && printf up || printf down; }
-rfcomm_state() { rfcomm -a 2>/dev/null | grep -q 'rfcomm0:.*connected' && printf connected || printf disconnected; }
+# Kernel-owned RFCOMM bindings report `clean` after the userspace binder hands
+# the DLC to the broker.  That is an established link, not a disconnect.
+rfcomm_state() { rfcomm -a 2>/dev/null | grep -Eq 'rfcomm0:.*(connected|clean)' && printf connected || printf disconnected; }
 status_reply() { printf '{"ok":true,"sessionId":"%s","wifiSta":"%s","rfcomm0":"%s"}' "$1" "$(wifi_state)" "$(rfcomm_state)"; }
 platform_frame_reply() {
     printf '{"protocol":"obdclaw.runner-ui.v1","sessionId":"%s","nativeFrameId":"platform-status","sequence":%s,"shareSeq":%s,"shareType":0,"layout":"MSG","title":"410 Platform Link","rows":[{"Wi-Fi STA":"%s","VCI RFCOMM":"%s","Vehicle diagnostics":"Waiting for Runner UI"}],"controls":[{"id":"refresh","label":"Refresh link state","nativeSelection":1},{"id":"cancel","label":"End local session","nativeSelection":0}]}' "$1" "$2" "$2" "$(wifi_state)" "$(rfcomm_state)"
