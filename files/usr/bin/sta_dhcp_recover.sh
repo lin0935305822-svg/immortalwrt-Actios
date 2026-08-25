@@ -20,6 +20,12 @@ has_ipv4() {
     status_json | grep -q '"ipv4-address"[[:space:]]*:[[:space:]]*\[[[:space:]]*{'
 }
 
+request_renew() {
+    # An interface already in netifd's pending state ignores a second `ifup`.
+    # Renew the DHCP protocol without tearing down the shared WCNSS radio.
+    ubus call "network.interface.$INTERFACE" renew >/dev/null 2>&1 || true
+}
+
 is_associated() {
     iw dev "$WIRELESS_DEVICE" link 2>/dev/null | grep -q '^Connected to '
 }
@@ -48,8 +54,8 @@ if has_ipv4; then
     exit 0
 fi
 
-log 'STA is associated but has no IPv4 lease; requesting one DHCP interface bring-up.'
-ifup "$INTERFACE"
+log 'STA is associated but has no IPv4 lease; requesting one DHCP protocol renew.'
+request_renew
 sleep "$POLL_SECONDS"
 
 if has_ipv4; then
