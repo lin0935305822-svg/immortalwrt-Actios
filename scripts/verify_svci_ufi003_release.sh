@@ -119,7 +119,7 @@ grep -Fq 'sta status rc=' files/usr/bin/usb_console_debug.sh
 grep -Fq "INTERFACE='wifi_sta'" files/usr/bin/sta_dhcp_recover.sh
 grep -Fq "WIRELESS_DEVICE='phy0-sta0'" files/usr/bin/sta_dhcp_recover.sh
 grep -Fq 'MAX_WAIT_SECONDS=45' files/usr/bin/sta_dhcp_recover.sh
-grep -Fq 'ifup "$INTERFACE"' files/usr/bin/sta_dhcp_recover.sh
+grep -Fq 'ubus call "network.interface.$INTERFACE" renew' files/usr/bin/sta_dhcp_recover.sh
 grep -Fq 'no further retries this boot' files/usr/bin/sta_dhcp_recover.sh
 if grep -Eq '(^|[^[:alnum:]_])wifi[[:space:]]+(down|reload)|ifdown' files/usr/bin/sta_dhcp_recover.sh; then
     echo 'STA recovery must not tear down a wireless interface' >&2
