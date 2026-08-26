@@ -26,3 +26,8 @@ awk '
   }
   END { exit failed }
 ' "$config_file"
+
+tr -d '\r' < "$config_file" | grep -Fx 'CONFIG_PACKAGE_dropbear=y' >/dev/null || {
+  echo 'UFI003 development sidecar deployment requires Dropbear' >&2
+  exit 1
+}

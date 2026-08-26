@@ -56,6 +56,7 @@ if [ -f config/ufi003.config ]; then
     require_config_once 'CONFIG_PACKAGE_uhttpd=y'
     require_config_once 'CONFIG_PACKAGE_libuhttpd-openssl=y'
     require_config_once 'CONFIG_PACKAGE_openssl-util=y'
+    require_config_once 'CONFIG_PACKAGE_dropbear=y'
     ! tr -d '\r' < config/ufi003.config | grep -Fx '# CONFIG_PACKAGE_openssl-util is not set'
     ! tr -d '\r' < config/ufi003.config | grep -Fx 'CONFIG_PACKAGE_kmod-hci-uart=y'
     ! tr -d '\r' < config/ufi003.config | grep -Fx 'CONFIG_PACKAGE_kmod-btusb=y'
