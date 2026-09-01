@@ -165,6 +165,10 @@ grep -Fq "option enable '1'" files/etc/config/dropbear
 grep -Fq "option Port '22'" files/etc/config/dropbear
 grep -Fq '/etc/init.d/dropbear enable' files/etc/uci-defaults/99-modem-led-status
 grep -Fq '/etc/init.d/dropbear start' files/etc/uci-defaults/99-modem-led-status
+if grep -Eq 'dropbear\.@dropbear\[0\]\.(DirectInterface|Interface)' files/etc/uci-defaults/92-obdclaw-tls-firewall; then
+    echo 'Dropbear must not bind directly to wifi_sta' >&2
+    exit 1
+fi
 grep -Fq "firewall.obdclaw_tls_control.src_ip='192.168.0.0/24'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_tls_control.dest_port='8443'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_tls_control.target='ACCEPT'" files/etc/uci-defaults/92-obdclaw-tls-firewall

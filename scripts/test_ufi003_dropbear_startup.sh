@@ -21,5 +21,10 @@ grep -Fq "firewall.obdclaw_dev_sidecar_ssh.src_ip='192.168.0.0/24'" \
     "$root/files/etc/uci-defaults/92-obdclaw-tls-firewall"
 grep -Fq "firewall.obdclaw_dev_sidecar_ssh.dest_port='22'" \
     "$root/files/etc/uci-defaults/92-obdclaw-tls-firewall"
+if grep -Eq 'dropbear\.@dropbear\[0\]\.(DirectInterface|Interface)' \
+    "$root/files/etc/uci-defaults/92-obdclaw-tls-firewall"; then
+    echo 'Dropbear must not bind directly to wifi_sta' >&2
+    exit 1
+fi
 
 echo 'UFI003 Dropbear startup tests passed.'
