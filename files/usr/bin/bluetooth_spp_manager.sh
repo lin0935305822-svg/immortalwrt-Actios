@@ -47,8 +47,6 @@ start_bluez() {
     return 1
 }
 
-start_bluez || true
-
 # This board exposes Bluetooth through Qualcomm WCNSS SMD. It is not a UART
 # or USB HCI device. Do not attach arbitrary serial ports because that cannot
 # initialize the board radio and can consume a console device.
@@ -74,6 +72,18 @@ setup_wcnss_hci() {
     log 'WCNSS SMD did not create hci0; no UART or USB fallback is permitted.'
     return 1
 }
+
+# bluetoothd initializes its adapter list only at startup.  On UFI003, the
+# WCNSS SMD HCI can appear after the service starts; make the controller
+# available first so BlueZ exports hci0 over D-Bus.
+setup_wcnss_hci || true
+if hciconfig hci0 >/dev/null 2>&1; then
+    hciconfig hci0 up 2>/dev/null || true
+    hciconfig hci0 name "$LOCAL_BT_NAME" 2>/dev/null || true
+    hciconfig hci0 piscan 2>/dev/null || true
+    hciconfig hci0 noauth noencrypt 2>/dev/null || true
+fi
+start_bluez || true
 
 while true; do
     setup_wcnss_hci || true

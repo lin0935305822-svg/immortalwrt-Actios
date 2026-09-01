@@ -4,7 +4,21 @@ set -eu
 
 root="${1:-.}"
 script="$root/files/usr/bin/rfcomm_a30m_bind.sh"
+manager="$root/files/usr/bin/bluetooth_spp_manager.sh"
 [ -x "$script" ] || { echo "RFCOMM manager is not executable: $script" >&2; exit 1; }
+[ -x "$manager" ] || { echo "Bluetooth SPP manager is not executable: $manager" >&2; exit 1; }
+
+# BlueZ discovers adapters when it starts. WCNSS hci0 must therefore be
+# initialized before the first service launch, not only in the later loop.
+hci_setup_line="$(grep -n '^setup_wcnss_hci || true$' "$manager" | head -n 1 | cut -d: -f1)"
+bluez_start_line="$(grep -n '^start_bluez || true$' "$manager" | head -n 1 | cut -d: -f1)"
+case "$hci_setup_line:$bluez_start_line" in
+    *[!0-9:]*|:*|*:) echo 'Bluetooth startup ordering markers are missing' >&2; exit 1 ;;
+esac
+[ "$hci_setup_line" -lt "$bluez_start_line" ] || {
+    echo 'BlueZ must start after WCNSS hci0 initialization' >&2
+    exit 1
+}
 
 temp="$(mktemp -d)"
 trap 'rm -rf "$temp"' EXIT HUP INT TERM
