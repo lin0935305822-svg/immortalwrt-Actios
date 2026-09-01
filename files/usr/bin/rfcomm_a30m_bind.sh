@@ -3,6 +3,7 @@
 
 LOG_TAG='rfcomm_a30m'
 LOCK_DIR='/tmp/rfcomm_a30m.lock'
+BLUEZ_READY_TIMEOUT_SECONDS=30
 
 # procd restart plus manual maintenance starts must never create competing
 # RFCOMM managers. The lock is scoped to this daemon and safely reclaimed when
@@ -23,8 +24,6 @@ acquire_lock() {
     trap 'rm -rf "$LOCK_DIR"' EXIT INT TERM
 }
 
-acquire_lock
-
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$LOG_TAG] $*" | tee -a /tmp/rfcomm_a30m.log >&2
 }
@@ -33,25 +32,28 @@ get_config() {
     uci get bluetooth_a30m.settings."$1" 2>/dev/null || echo "$2"
 }
 
-[ "$(get_config enabled 1)" = 1 ] || exit 0
 
-TARGET_MAC="$(get_config target_mac '')"
-RFCOMM_DEV_INDEX="$(get_config rfcomm_dev 0)"
-RFCOMM_NODE="/dev/rfcomm${RFCOMM_DEV_INDEX}"
-SCAN_TRANSPORT="$(get_config scan_transport bredr)"
-SPP_UUID='00001101-0000-1000-8000-00805f9b34fb'
+# bluetoothd can have a running process before it owns the D-Bus API used by
+# bluetoothctl.  Do not write a one-shot scan/pair transaction until its
+# controller is visible, otherwise bluetoothctl discards those commands while
+# reporting "Waiting to connect to bluetoothd".
+bluez_control_ready() {
+    waited=0
+    while [ "$waited" -lt "$BLUEZ_READY_TIMEOUT_SECONDS" ]; do
+        controller_output="$(bluetoothctl show 2>&1 || true)"
+        if printf '%s\n' "$controller_output" | grep -q 'Controller '; then
+            [ "$waited" -eq 0 ] || log "BlueZ control interface became ready after ${waited}s."
+            return 0
+        fi
 
-# A30M SPP is a Classic Bluetooth service.  Generic "scan on" can select
-# LE scanning and never create a BR/EDR device object for pairing.
-if [ "$SCAN_TRANSPORT" != 'bredr' ]; then
-    log "Ignoring unsupported scan transport '$SCAN_TRANSPORT'; Classic SPP requires bredr."
-fi
-SCAN_COMMAND='scan bredr'
+        [ "$waited" -ne 0 ] || log 'Waiting for BlueZ D-Bus control interface.'
+        sleep 1
+        waited=$((waited + 1))
+    done
 
-while ! hciconfig hci0 2>/dev/null | grep -q 'UP RUNNING'; do
-    log 'Waiting for Bluetooth adapter hci0 to be UP.'
-    sleep 3
-done
+    log "BlueZ control interface did not become ready within ${BLUEZ_READY_TIMEOUT_SECONDS}s."
+    return 1
+}
 
 scan_for_a30m() {
     hcitool scan 2>/dev/null | awk '/A30M/ {print $1; exit}'
@@ -65,15 +67,18 @@ is_connected() {
 }
 
 is_paired() {
+    bluez_control_ready || return 1
     bluetoothctl info "$1" 2>/dev/null | grep -Eq 'Paired:[[:space:]]+yes'
 }
 
 is_trusted() {
+    bluez_control_ready || return 1
     bluetoothctl info "$1" 2>/dev/null | grep -Eq 'Trusted:[[:space:]]+yes'
 }
 
 trust_device() {
     mac="$1"
+    bluez_control_ready || return 1
     is_trusted "$mac" && return 0
     printf 'trust %s\nquit\n' "$mac" | bluetoothctl >/tmp/rfcomm_a30m_trust.log 2>&1
     is_trusted "$mac"
@@ -81,6 +86,11 @@ trust_device() {
 
 pair_device() {
     mac="$1"
+    if ! bluez_control_ready; then
+        log "Deferring pairing for $mac until BlueZ is ready."
+        return 1
+    fi
+
     if is_paired "$mac"; then
         trust_device "$mac" || log "Could not mark paired device $mac as trusted."
         log "$mac has a confirmed BlueZ bond."
@@ -186,18 +196,48 @@ connect_spp() {
     return 1
 }
 
-log 'Starting A30M RFCOMM daemon.'
-while true; do
-    CURRENT_MAC="$TARGET_MAC"
-    [ -n "$CURRENT_MAC" ] || CURRENT_MAC="$(scan_for_a30m)"
+main() {
+    acquire_lock
 
-    if [ -z "$CURRENT_MAC" ]; then
-        log 'No A30M device address is available. Retrying later.'
-    elif is_connected; then
-        log "$RFCOMM_NODE is already connected."
-    elif pair_device "$CURRENT_MAC"; then
-        connect_spp "$CURRENT_MAC" || true
+    [ "$(get_config enabled 1)" = 1 ] || return 0
+
+    TARGET_MAC="$(get_config target_mac '')"
+    RFCOMM_DEV_INDEX="$(get_config rfcomm_dev 0)"
+    RFCOMM_NODE="/dev/rfcomm${RFCOMM_DEV_INDEX}"
+    SCAN_TRANSPORT="$(get_config scan_transport bredr)"
+    SPP_UUID='00001101-0000-1000-8000-00805f9b34fb'
+
+    # A30M SPP is a Classic Bluetooth service.  Generic "scan on" can select
+    # LE scanning and never create a BR/EDR device object for pairing.
+    if [ "$SCAN_TRANSPORT" != 'bredr' ]; then
+        log "Ignoring unsupported scan transport '$SCAN_TRANSPORT'; Classic SPP requires bredr."
     fi
+    SCAN_COMMAND='scan bredr'
 
-    sleep 30
-done
+    while ! hciconfig hci0 2>/dev/null | grep -q 'UP RUNNING'; do
+        log 'Waiting for Bluetooth adapter hci0 to be UP.'
+        sleep 3
+    done
+
+    log 'Starting A30M RFCOMM daemon.'
+    while true; do
+        CURRENT_MAC="$TARGET_MAC"
+        [ -n "$CURRENT_MAC" ] || CURRENT_MAC="$(scan_for_a30m)"
+
+        if [ -z "$CURRENT_MAC" ]; then
+            log 'No A30M device address is available. Retrying later.'
+        elif is_connected; then
+            log "$RFCOMM_NODE is already connected."
+        elif pair_device "$CURRENT_MAC"; then
+            connect_spp "$CURRENT_MAC" || true
+        fi
+
+        sleep 30
+    done
+}
+
+# Library mode is limited to the checked-in shell regression test.  It avoids
+# boot-time radio and lock side effects while testing the actual functions.
+if [ "${RFCOMM_A30M_LIBRARY_ONLY:-0}" != 1 ]; then
+    main "$@"
+fi
