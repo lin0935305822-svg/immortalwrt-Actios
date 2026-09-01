@@ -78,6 +78,7 @@ require_file files/www/cgi-bin/obdclaw-runner.cgi
 require_file files/etc/config/uhttpd
 require_file files/etc/config/wireless
 require_file files/etc/config/network
+require_file files/etc/config/dropbear
 require_file files/etc/uci-defaults/92-obdclaw-tls-firewall
 
 require_exec files/etc/init.d/obdclaw_led_status
@@ -113,6 +114,9 @@ grep -Fq 'rfcomm -i hci0 bind' files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq "LOCK_DIR='/tmp/rfcomm_a30m.lock'" files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq "SCAN_COMMAND='scan bredr'" files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq "printf '%s\\n' \"\$SCAN_COMMAND\"" files/usr/bin/rfcomm_a30m_bind.sh
+grep -Fq 'bluez_control_ready()' files/usr/bin/rfcomm_a30m_bind.sh
+grep -Fq 'bluetoothctl show' files/usr/bin/rfcomm_a30m_bind.sh
+grep -Fq 'Deferring pairing for $mac until BlueZ is ready.' files/usr/bin/rfcomm_a30m_bind.sh
 grep -Fq 'emit_vci_status()' files/usr/bin/usb_console_debug.sh
 grep -Fq 'emit_sta_status()' files/usr/bin/usb_console_debug.sh
 grep -Fq 'sta status' files/usr/bin/usb_console_debug.sh
@@ -157,6 +161,10 @@ grep -Fq "firewall.wifi_sta_control.name='wifi_sta'" files/etc/uci-defaults/92-o
 grep -Fq "firewall.obdclaw_dev_sidecar_ssh.src='wifi_sta'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_dev_sidecar_ssh.src_ip='192.168.0.0/24'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_dev_sidecar_ssh.dest_port='22'" files/etc/uci-defaults/92-obdclaw-tls-firewall
+grep -Fq "option enable '1'" files/etc/config/dropbear
+grep -Fq "option Port '22'" files/etc/config/dropbear
+grep -Fq '/etc/init.d/dropbear enable' files/etc/uci-defaults/99-modem-led-status
+grep -Fq '/etc/init.d/dropbear start' files/etc/uci-defaults/99-modem-led-status
 grep -Fq "firewall.obdclaw_tls_control.src_ip='192.168.0.0/24'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_tls_control.dest_port='8443'" files/etc/uci-defaults/92-obdclaw-tls-firewall
 grep -Fq "firewall.obdclaw_tls_control.target='ACCEPT'" files/etc/uci-defaults/92-obdclaw-tls-firewall

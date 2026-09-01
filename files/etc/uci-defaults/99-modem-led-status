@@ -41,6 +41,15 @@ if [ -f /etc/init.d/rfcomm_a30m ]; then
     /etc/init.d/rfcomm_a30m enable >/dev/null 2>&1 || true
 fi
 
+# The development Runner deployer uses the stock Dropbear transport only on
+# the firewall-restricted wifi_sta LAN. Package selection alone does not add
+# its init link on every base image, so enable and start the checked-in
+# instance during first boot. This never installs an SSH authority key.
+if [ -f /etc/init.d/dropbear ]; then
+    /etc/init.d/dropbear enable >/dev/null 2>&1 || true
+    /etc/init.d/dropbear start >/dev/null 2>&1 || true
+fi
+
 # The TLS material must exist before the HTTPS listener is started.  uci-defaults
 # run after normal init service startup, so enable alone would defer uhttpd until
 # a second reboot and leave the phone without a first-boot control endpoint.

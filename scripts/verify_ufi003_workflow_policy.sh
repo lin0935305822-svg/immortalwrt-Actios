@@ -35,6 +35,8 @@ require_text 'FLASH_PACKAGE_SHA256'
 for script in \
     './scripts/verify_ufi003_workflow_policy.sh .' \
     './scripts/verify_ufi003_config_consistency.sh config/ufi003.config' \
+    './scripts/test_rfcomm_a30m_bluez_readiness.sh .' \
+    './scripts/test_ufi003_dropbear_startup.sh .' \
     './scripts/test_obdclaw_local_control.sh .' \
     './scripts/test_obdclaw_runner_auth.sh .' \
     './scripts/test_obdclaw_runner_authority_install.sh .' \

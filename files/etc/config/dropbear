@@ -1,0 +1,6 @@
+# Development sidecar transport. Firewall policy restricts port 22 to the
+# trusted wifi_sta test LAN; authentication remains under normal Dropbear
+# policy and is never provisioned by the firmware image.
+config dropbear
+	option enable '1'
+	option Port '22'
