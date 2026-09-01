@@ -15,6 +15,8 @@ defaults="$root/files/etc/uci-defaults/99-modem-led-status"
 }
 grep -Fq "option enable '1'" "$config"
 grep -Fq "option Port '22'" "$config"
+grep -Fq "option PasswordAuth 'off'" "$config"
+grep -Fq "option RootPasswordAuth 'off'" "$config"
 grep -Fq '/etc/init.d/dropbear enable' "$defaults"
 grep -Fq '/etc/init.d/dropbear start' "$defaults"
 grep -Fq "firewall.obdclaw_dev_sidecar_ssh.src_ip='192.168.0.0/24'" \
