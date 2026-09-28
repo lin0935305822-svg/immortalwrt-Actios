@@ -41,7 +41,15 @@ bluez_control_ready() {
     waited=0
     while [ "$waited" -lt "$BLUEZ_READY_TIMEOUT_SECONDS" ]; do
         controller_output="$(bluetoothctl show 2>&1 || true)"
-        if printf '%s\n' "$controller_output" | grep -q 'Controller '; then
+        controller_list="$(bluetoothctl list 2>&1 || true)"
+        if printf '%s\n%s\n' "$controller_output" "$controller_list" | grep -q 'Controller '; then
+            [ "$waited" -eq 0 ] || log "BlueZ control interface became ready after ${waited}s."
+            return 0
+        fi
+        # WCNSS BlueZ may fail MGMT default-parameter setup while the kernel
+        # controller is already usable. Continue into the pairing transaction
+        # so this state can be tested instead of waiting forever.
+        if hciconfig hci0 2>/dev/null | grep -q 'UP RUNNING'; then
             [ "$waited" -eq 0 ] || log "BlueZ control interface became ready after ${waited}s."
             return 0
         fi

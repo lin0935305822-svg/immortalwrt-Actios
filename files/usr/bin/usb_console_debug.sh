@@ -32,6 +32,24 @@ emit_sta_status() {
     emit "sta status rc=$status_rc ${compact_status:-unavailable}"
 }
 
+emit_control_status() {
+    emit "control setup_log=$(tail -n 12 /tmp/obdclaw-control-setup.log 2>/dev/null | tr '\n' ' ' | sed 's/[[:space:]][[:space:]]*/ /g')"
+    for path in /usr/bin/openssl /usr/sbin/px5g /etc/uhttpd.crt /etc/uhttpd.key /overlay/obdclaw/local-control/token_hmac.hex /overlay/obdclaw/local-control/device_id; do
+        if [ -e "$path" ]; then
+            if [ -s "$path" ]; then
+                emit "control path=$path present=1 nonempty=1"
+            else
+                emit "control path=$path present=1 nonempty=0"
+            fi
+        else
+            emit "control path=$path present=0 nonempty=0"
+        fi
+    done
+    emit "control pidof_uhttpd=$(pidof uhttpd 2>/dev/null || true)"
+    netstat -lnt 2>/dev/null | grep -E '(:8443|:18800|:22)[[:space:]]' | while IFS= read -r line; do emit "control listener $line"; done
+    logread 2>/dev/null | grep -Ei 'uhttpd|obdclaw-control|openssl|px5g|certificate|tls' | tail -n 20 | while IFS= read -r line; do emit "control log $line"; done
+}
+
 snapshot() {
     emit '=== SVCI MSM8916 runtime debug ==='
     emit "time=$(date -Iseconds 2>/dev/null || date)"
@@ -42,6 +60,7 @@ snapshot() {
     ubus call network.wireless status 2>/dev/null | tr '\n' ' ' | while IFS= read -r line; do emit "wireless $line"; done
     rfkill list 2>/dev/null | while IFS= read -r line; do emit "rfkill $line"; done
     emit_vci_status
+    emit_control_status
     logread 2>/dev/null | grep -Ei 'wcnss|wlan|wifi|ath|qca|bluetooth|usb_acm|ttyGS' | tail -n 40 | while IFS= read -r line; do emit "log $line"; done
     emit '=== debug snapshot end ==='
 }
@@ -50,5 +69,6 @@ snapshot
 while sleep 30; do
     emit_sta_status
     emit_vci_status
+    emit_control_status
     emit "heartbeat $(date -Iseconds 2>/dev/null || date)"
 done

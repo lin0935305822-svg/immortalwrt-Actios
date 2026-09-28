@@ -62,6 +62,6 @@ nonce_key="$(printf '%s' "$session_id|$nonce" | sha256sum | awk '{print $1}')"
 wifi_state=down
 ubus call network.interface.wifi_sta status 2>/dev/null | grep -q '"up": true' && wifi_state=up
 rfcomm_state=disconnected
-rfcomm -a 2>/dev/null | grep -q 'rfcomm0:.*connected' && rfcomm_state=connected
+rfcomm -a 2>/dev/null | grep -Eq 'rfcomm0:.*(connected|clean)' && rfcomm_state=connected
 printf 'Content-Type: application/json\r\nCache-Control: no-store\r\n\r\n'
 printf '{"ok":true,"sessionId":"%s","wifiSta":"%s","rfcomm0":"%s"}\n' "$session_id" "$wifi_state" "$rfcomm_state"

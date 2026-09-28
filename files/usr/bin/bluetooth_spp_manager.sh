@@ -8,6 +8,14 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$LOG_TAG] $*" | tee -a /tmp/bluetooth_spp.log
 }
 
+bluez_controller_visible() {
+    bluetoothctl show 2>&1 | grep -q 'Controller ' && return 0
+    bluetoothctl list 2>&1 | grep -q 'Controller ' && return 0
+    # Some WCNSS BlueZ builds fail the default-parameter management command
+    # while hci0 remains usable; let the RFCOMM worker attempt pairing.
+    hciconfig hci0 2>/dev/null | grep -q 'UP RUNNING'
+}
+
 if ! pgrep -x dbus-daemon >/dev/null; then
     log 'Starting D-Bus.'
     /etc/init.d/dbus start 2>/dev/null || true
@@ -15,8 +23,21 @@ if ! pgrep -x dbus-daemon >/dev/null; then
 fi
 
 start_bluez() {
+    # A stale bluetoothd process can survive while its system-bus name and
+    # controller object are unavailable. Treat that state as failed rather
+    # than allowing the RFCOMM manager to wait forever.
     if pgrep -x bluetoothd >/dev/null; then
-        return 0
+        if bluez_controller_visible; then
+            return 0
+        fi
+
+        log 'BlueZ process exists without a usable D-Bus controller; restarting it.'
+        if [ -x /etc/init.d/bluetoothd ]; then
+            /etc/init.d/bluetoothd stop 2>/dev/null || true
+        else
+            killall bluetoothd 2>/dev/null || true
+        fi
+        sleep 1
     fi
 
     # bluez-daemon owns its D-Bus name through OpenWrt's init service.  A
@@ -37,13 +58,15 @@ start_bluez() {
     fi
 
     retry=0
-    while [ "$retry" -lt 10 ]; do
-        pgrep -x bluetoothd >/dev/null && return 0
+    while [ "$retry" -lt 30 ]; do
+        if pgrep -x bluetoothd >/dev/null && bluez_controller_visible; then
+            return 0
+        fi
         sleep 1
         retry=$((retry + 1))
     done
 
-    log 'BlueZ did not become ready.'
+    log 'BlueZ did not expose a usable D-Bus controller.'
     return 1
 }
 

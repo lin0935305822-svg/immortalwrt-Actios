@@ -33,6 +33,39 @@ safe_resource_path() { case "$1" in ''|*..*|*[!A-Za-z0-9_.-]*) return 1;; esac; 
 safe_base64() { case "$1" in ''|*[!A-Za-z0-9+/=]*) return 1;; esac; [ "$((${#1} % 4))" -eq 0 ] && [ "${#1}" -le 90112 ]; }
 valid_number() { case "$1" in ''|*[!0-9]*) return 1;; esac; return 0; }
 valid_hash() { case "$1" in *[!0-9A-Fa-f]*|'') return 1;; esac; [ "${#1}" -eq 64 ]; }
+url_hex_digit() {
+    case "$1" in
+        0) printf 0;; 1) printf 1;; 2) printf 2;; 3) printf 3;;
+        4) printf 4;; 5) printf 5;; 6) printf 6;; 7) printf 7;;
+        8) printf 8;; 9) printf 9;; A|a) printf 10;; B|b) printf 11;;
+        C|c) printf 12;; D|d) printf 13;; E|e) printf 14;; F|f) printf 15;;
+        *) return 1;;
+    esac
+}
+url_decode() {
+    # Android form encoding escapes Base64 '+' '/' and '='.  Decode bytes
+    # with POSIX shell arithmetic so this also works with BusyBox ash, whose
+    # printf does not implement the non-portable \\xHH extension.
+    input="$1"
+    while [ -n "$input" ]; do
+        char="${input%${input#?}}"
+        input="${input#?}"
+        if [ "$char" = '%' ] && [ "${#input}" -ge 2 ]; then
+            first="${input%${input#?}}"
+            rest="${input#?}"
+            second="${rest%${rest#?}}"
+            if first_value="$(url_hex_digit "$first")" && second_value="$(url_hex_digit "$second")"; then
+                byte_value=$((first_value * 16 + second_value))
+                octal_value="$(printf '%03o' "$byte_value")"
+                printf "\\$octal_value"
+                input="${rest#?}"
+                continue
+            fi
+        fi
+        [ "$char" = '+' ] && char=' '
+        printf '%s' "$char"
+    done
+}
 auth_now() { "$AUTH_CLOCK"; }
 new_session_id() {
     if [ -r /proc/sys/kernel/random/uuid ]; then
@@ -136,6 +169,7 @@ if [ "$action" = OPEN_SESSION ]; then
     [ -s "$DEVICE_ID_FILE" ] || reply '{"ok":false,"error":"identity-not-ready"}'
     device_id="${body#deviceId=}"
     device_id="${device_id%%&*}"
+    device_id="$(url_decode "$device_id")"
     safe_id "$device_id" || reply '{"ok":false,"error":"malformed-device"}'
     [ "$device_id" = "$(cat "$DEVICE_ID_FILE")" ] || reply '{"ok":false,"error":"wrong-device"}'
     now="$(auth_now)"; valid_number "$now" || reply '{"ok":false,"error":"clock-unavailable"}'
@@ -157,6 +191,7 @@ fi
 case "$action" in STATUS|NEXT_FRAME|CANCEL|UI_SELECT|RESOURCE_NEXT|RESOURCE_REPLY) ;; *) reply '{"ok":false,"error":"malformed-request"}';; esac
 session_id="${body#sessionId=}"
 session_id="${session_id%%&*}"
+session_id="$(url_decode "$session_id")"
 safe_id "$session_id" || reply '{"ok":false,"error":"malformed-session"}'
 session_file="$SESSION_DIR/$session_id"
 [ -r "$session_file" ] || reply '{"ok":false,"error":"unknown-session"}'
@@ -193,10 +228,10 @@ case "$action" in
         reply "$(platform_frame_reply "$session_id" "$sequence")"
         ;;
     UI_SELECT)
-        native_frame_id="${body#*nativeFrameId=}"; native_frame_id="${native_frame_id%%&*}"
-        share_seq="${body#*shareSeq=}"; share_seq="${share_seq%%&*}"
-        share_type="${body#*shareType=}"; share_type="${share_type%%&*}"
-        selection="${body#*nativeSelection=}"; selection="${selection%%&*}"
+        native_frame_id="${body#*nativeFrameId=}"; native_frame_id="${native_frame_id%%&*}"; native_frame_id="$(url_decode "$native_frame_id")"
+        share_seq="${body#*shareSeq=}"; share_seq="${share_seq%%&*}"; share_seq="$(url_decode "$share_seq")"
+        share_type="${body#*shareType=}"; share_type="${share_type%%&*}"; share_type="$(url_decode "$share_type")"
+        selection="${body#*nativeSelection=}"; selection="${selection%%&*}"; selection="$(url_decode "$selection")"
         safe_id "$native_frame_id" && valid_number "$share_seq" && valid_number "$share_type" && valid_number "$selection" &&
             [ "$selection" -le 65535 ] || reply '{"ok":false,"error":"invalid-ui-reply"}'
         [ "$frame_replied" = 0 ] || reply '{"ok":false,"error":"frame-already-replied"}'
@@ -236,10 +271,10 @@ case "$action" in
         reply 'null'
         ;;
     RESOURCE_REPLY)
-        reply_request_id="${body#*requestId=}"; reply_request_id="${reply_request_id%%&*}"
-        reply_resource_path="${body#*path=}"; reply_resource_path="${reply_resource_path%%&*}"
-        reply_block_index="${body#*blockIndex=}"; reply_block_index="${reply_block_index%%&*}"
-        reply_payload="${body#*payloadBase64=}"; reply_payload="${reply_payload%%&*}"
+        reply_request_id="${body#*requestId=}"; reply_request_id="${reply_request_id%%&*}"; reply_request_id="$(url_decode "$reply_request_id")"
+        reply_resource_path="${body#*path=}"; reply_resource_path="${reply_resource_path%%&*}"; reply_resource_path="$(url_decode "$reply_resource_path")"
+        reply_block_index="${body#*blockIndex=}"; reply_block_index="${reply_block_index%%&*}"; reply_block_index="$(url_decode "$reply_block_index")"
+        reply_payload="${body#*payloadBase64=}"; reply_payload="${reply_payload%%&*}"; reply_payload="$(url_decode "$reply_payload")"
         valid_number "$reply_request_id" && safe_resource_path "$reply_resource_path" &&
             valid_number "$reply_block_index" && safe_base64 "$reply_payload" ||
             reply '{"ok":false,"error":"invalid-resource-reply"}'
