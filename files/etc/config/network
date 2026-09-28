@@ -42,6 +42,7 @@ config interface 'diag_lan'
 # 仅在物理 Wi-Fi 握手关联手机热点成功后激活 DHCP 申请，开机无网时不阻塞引导，符合 QUALCOMM_410_WIFI_STATION_NO_4G_SPEC.md 规范
 config interface 'wifi_sta'
 	option proto 'dhcp'
+	option hostname 'obdclaw-410'
 
 # 5. 4G 旁路 Modem 接口 (wwan0)
 # 强制关闭默认路由注入与转发，符合 QUALCOMM_410_WIFI_STATION_NO_4G_SPEC.md 中的风控隔离规范

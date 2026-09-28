@@ -1,5 +1,5 @@
 config system
-	option hostname 'ImmortalWrt'
+	option hostname 'obdclaw-410'
 	option timezone 'CST-8'
 	option zonename 'Asia/Shanghai'
 
