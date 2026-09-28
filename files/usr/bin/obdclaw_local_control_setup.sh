@@ -17,12 +17,25 @@ if ! mkdir -p "$STATE_DIR"; then
     mkdir -p "$STATE_DIR"
 fi
 
+generate_hex() {
+    bytes="$1"
+    if command -v openssl >/dev/null 2>&1; then
+        openssl rand -hex "$bytes"
+    elif command -v sha256sum >/dev/null 2>&1; then
+        # Keep a usable fallback for images that defer TLS generation to px5g.
+        dd if=/dev/urandom bs="$bytes" count=1 2>/dev/null |
+            sha256sum | cut -c1-$((bytes * 2))
+    else
+        return 1
+    fi
+}
+
 if [ ! -s "$SECRET_FILE" ]; then
-    od -An -N32 -tx1 /dev/urandom | tr -d ' \n' >"$SECRET_FILE"
+    generate_hex 32 >"$SECRET_FILE"
 fi
 
 if [ ! -s "$DEVICE_ID_FILE" ]; then
-    od -An -N16 -tx1 /dev/urandom | tr -d ' \n' >"$DEVICE_ID_FILE"
+    generate_hex 16 >"$DEVICE_ID_FILE"
 fi
 
 if [ ! -s "$CERT" ] || [ ! -s "$KEY" ]; then
