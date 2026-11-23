@@ -274,7 +274,12 @@ case "$action" in
         reply_request_id="${body#*requestId=}"; reply_request_id="${reply_request_id%%&*}"; reply_request_id="$(url_decode "$reply_request_id")"
         reply_resource_path="${body#*path=}"; reply_resource_path="${reply_resource_path%%&*}"; reply_resource_path="$(url_decode "$reply_resource_path")"
         reply_block_index="${body#*blockIndex=}"; reply_block_index="${reply_block_index%%&*}"; reply_block_index="$(url_decode "$reply_block_index")"
-        reply_payload="${body#*payloadBase64=}"; reply_payload="${reply_payload%%&*}"; reply_payload="$(url_decode "$reply_payload")"
+        reply_payload="${body#*payloadBase64=}"; reply_payload="${reply_payload%%&*}"
+        # A data block is roughly 5.5 KB of Base64. The generic POSIX-shell
+        # decoder loops per character and can outlive uhttpd's CGI deadline,
+        # leaving the session locked. Android's form encoder escapes only
+        # '+', '/' and '=' in this alphabet; reject any other escape below.
+        reply_payload="$(printf '%s' "$reply_payload" | sed -e 's|%2[Bb]|+|g' -e 's|%2[Ff]|/|g' -e 's|%3[Dd]|=|g')"
         valid_number "$reply_request_id" && safe_resource_path "$reply_resource_path" &&
             valid_number "$reply_block_index" && safe_base64 "$reply_payload" ||
             reply '{"ok":false,"error":"invalid-resource-reply"}'
