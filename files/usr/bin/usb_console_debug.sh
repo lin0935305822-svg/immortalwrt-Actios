@@ -10,6 +10,12 @@ emit() {
     logger -t usb_console_debug "$*"
 }
 
+# Lines copied from logread already exist in syslog. Re-logging them makes
+# each snapshot feed later snapshots, increasing log volume on every cycle.
+emit_serial() {
+    printf '%s\r\n' "$*" > "$TTY"
+}
+
 emit_vci_status() {
     target_mac="$(uci -q get bluetooth_a30m.settings.target_mac 2>/dev/null || true)"
     emit "vci target=${target_mac:-unconfigured}"
@@ -47,7 +53,7 @@ emit_control_status() {
     done
     emit "control pidof_uhttpd=$(pidof uhttpd 2>/dev/null || true)"
     netstat -lnt 2>/dev/null | grep -E '(:8443|:18800|:22)[[:space:]]' | while IFS= read -r line; do emit "control listener $line"; done
-    logread 2>/dev/null | grep -Ei 'uhttpd|obdclaw-control|openssl|px5g|certificate|tls' | tail -n 20 | while IFS= read -r line; do emit "control log $line"; done
+    logread 2>/dev/null | grep -Ei 'uhttpd|obdclaw-control|openssl|px5g|certificate|tls' | grep -v 'usb_console_debug:' | tail -n 20 | while IFS= read -r line; do emit_serial "control log $line"; done
 }
 
 snapshot() {
@@ -61,7 +67,7 @@ snapshot() {
     rfkill list 2>/dev/null | while IFS= read -r line; do emit "rfkill $line"; done
     emit_vci_status
     emit_control_status
-    logread 2>/dev/null | grep -Ei 'wcnss|wlan|wifi|ath|qca|bluetooth|usb_acm|ttyGS' | tail -n 40 | while IFS= read -r line; do emit "log $line"; done
+    logread 2>/dev/null | grep -Ei 'wcnss|wlan|wifi|ath|qca|bluetooth|usb_acm|ttyGS' | grep -v 'usb_console_debug:' | tail -n 40 | while IFS= read -r line; do emit_serial "log $line"; done
     emit '=== debug snapshot end ==='
 }
 
