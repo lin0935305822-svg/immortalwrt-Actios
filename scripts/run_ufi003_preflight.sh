@@ -15,6 +15,7 @@ cd "$root"
 /bin/sh ./scripts/test_obdclaw_runner_auth.sh .
 /bin/sh ./scripts/test_obdclaw_runner_authority_install.sh .
 /bin/sh ./scripts/test_usb_console_debug_no_feedback.sh
+/bin/sh ./scripts/test_obdclaw_bt_coex_one_shot.sh
 /bin/sh ./scripts/test_svci_ufi003_source_stage.sh .
 /bin/sh ./scripts/verify_svci_ufi003_release.sh .
 
