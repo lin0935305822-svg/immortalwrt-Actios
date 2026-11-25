@@ -28,3 +28,10 @@ sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/M
 # git clone https://github.com/lkiuyu/luci-app-temp-status package/luci-app-temp-status
 # git clone https://github.com/lkiuyu/DbusSmsForwardCPlus package/DbusSmsForwardCPlus
 
+
+# Enable pstore/ramoops console & oops capture
+for cfg in target/linux/msm89xx/config-*; do
+  grep -q '^CONFIG_PSTORE=' "$cfg" || echo 'CONFIG_PSTORE=y' >> "$cfg"
+  grep -q '^CONFIG_PSTORE_CONSOLE=' "$cfg" || echo 'CONFIG_PSTORE_CONSOLE=y' >> "$cfg"
+  grep -q '^CONFIG_PSTORE_RAM=' "$cfg" || echo 'CONFIG_PSTORE_RAM=y' >> "$cfg"
+done
