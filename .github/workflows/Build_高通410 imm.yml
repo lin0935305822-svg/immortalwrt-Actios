@@ -390,11 +390,11 @@ jobs:
         out="$GITHUB_WORKSPACE/diagnostic-build-info"
         mkdir -p "$out"
         kernel="$(find openwrt/build_dir -type f -path '*/linux-*/linux-*/vmlinux' -print -quit)"
-        dtb="$(find openwrt/build_dir -type f -name 'msm8916-thwc-ufi003-ramoops.dtb' -print -quit)"
+        dtb="$(find openwrt/build_dir -type f -name 'image-msm8916-thwc-ufi003-ramoops.dtb' -print -quit)"
         config="$(find openwrt/build_dir -type f -path '*/linux-*/linux-*/.config' -print -quit)"
-        test -s "$kernel"
-        test -s "$dtb"
-        test -s "$config"
+        test -s "$kernel" || { echo "::error::vmlinux not found under build_dir"; exit 1; }
+        test -s "$dtb" || { echo "::error::image-msm8916-thwc-ufi003-ramoops.dtb not found under build_dir"; exit 1; }
+        test -s "$config" || { echo "::error::kernel .config not found under build_dir"; exit 1; }
         cp "$kernel" "$out/vmlinux"
         cp "$dtb" "$out/msm8916-thwc-ufi003-ramoops.dtb"
         cp "$config" "$out/kernel.config"
