@@ -198,6 +198,18 @@ jobs:
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
 
+    - name: Restore libffi for locked UFI003 diagnostic build
+      if: inputs.ramoops_diag
+      run: |
+        set -eu
+        # immortalwrt/packages removed libffi on 2026-10-19 for a newer core.
+        # The locked 7fe583d upstream still needs the feed's 3.4.7 recipe.
+        test ! -e openwrt/package/libs/libffi
+        test ! -e openwrt/feeds/packages/libs/libffi
+        echo 'cec8456f8958a8b4e8af2bcca944600827d29c64f0b59fabf833599864e3c12f  diagnostics/libffi-3.4.7/Makefile' | sha256sum -c -
+        install -d openwrt/package/libs/libffi
+        install -m 0644 diagnostics/libffi-3.4.7/Makefile openwrt/package/libs/libffi/Makefile
+
     - name: Remove conflicting packages from smpackage
       run: |
         # 删除 small-package 中与系统冲突的包，避免编译报错（官方推荐操作）
@@ -296,6 +308,10 @@ jobs:
       id: config
       run: |
         cd openwrt
+        if [ "${{ inputs.ramoops_diag }}" = "true" ]; then
+          sed -i 's/^# CONFIG_PACKAGE_libffi is not set$/CONFIG_PACKAGE_libffi=y/' .config
+          grep -Fx 'CONFIG_PACKAGE_libffi=y' .config
+        fi
         make defconfig
 
     - name: Verify UFI003 configuration before package download
@@ -310,6 +326,10 @@ jobs:
         grep -Fx 'CONFIG_PACKAGE_bluez-utils=y' .config
         grep -Fx 'CONFIG_PACKAGE_bluez-libs=y' .config
         grep -Fx 'CONFIG_PACKAGE_dbus=y' .config
+        if [ "${{ inputs.ramoops_diag }}" = "true" ]; then
+          test -f package/libs/libffi/Makefile
+          grep -Fx 'CONFIG_PACKAGE_libffi=y' .config
+        fi
         grep -Fx 'CONFIG_PACKAGE_uhttpd=y' .config
         grep -Fx 'CONFIG_PACKAGE_libuhttpd-openssl=y' .config
         grep -Fx 'CONFIG_PACKAGE_openssl-util=y' .config
