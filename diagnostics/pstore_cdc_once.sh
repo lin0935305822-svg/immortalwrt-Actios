@@ -5,6 +5,10 @@ tty=/dev/ttyGS0
 store=/sys/fs/pstore
 [ -c "$tty" ] || exit 0
 
+# Windows may enumerate COM6 after the gadget node appears. The host collector
+# is already running before reboot and opens the port as soon as it appears.
+sleep 20
+
 printf 'PSTORE_EXPORT_BEGIN version=1\r\n' > "$tty"
 if ! grep -q " $store " /proc/mounts; then
     mount -t pstore -o ro pstore "$store" 2>/dev/null || true
