@@ -187,6 +187,14 @@ jobs:
         mkdir -p openwrt/files
         cp -a files/. openwrt/files/
 
+    - name: Stage pstore export over CDC for diagnostic builds
+      if: ${{ inputs.ramoops_diag == true }}
+      run: |
+        set -eu
+        install -m 0755 diagnostics/pstore_cdc_once.sh openwrt/files/usr/bin/pstore_cdc_once.sh
+        sed -i '/^snapshot$/i /usr/bin/pstore_cdc_once.sh' openwrt/files/usr/bin/usb_console_debug.sh
+        test "$(grep -Fxc '/usr/bin/pstore_cdc_once.sh' openwrt/files/usr/bin/usb_console_debug.sh)" -eq 1
+
     - name: Load custom feeds
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
@@ -449,6 +457,10 @@ jobs:
         require_rootfs_exec /usr/bin/hciconfig
         require_rootfs_exec /bin/ubus
         require_rootfs_exec /bin/busybox
+        if [ "${{ inputs.ramoops_diag }}" = 'true' ]; then
+          require_rootfs_exec /usr/bin/pstore_cdc_once.sh
+          debugfs -R 'cat /usr/bin/usb_console_debug.sh' "$image_raw" 2>/dev/null | grep -Fx '/usr/bin/pstore_cdc_once.sh'
+        fi
 
     - name: Get kernel version
       run: |
