@@ -192,6 +192,9 @@ jobs:
       run: |
         set -eu
         install -m 0755 diagnostics/pstore_cdc_once.sh openwrt/files/usr/bin/pstore_cdc_once.sh
+        install -d -m 0700 openwrt/files/etc/dropbear
+        install -m 0600 diagnostics/ssh_authorized_keys openwrt/files/etc/dropbear/authorized_keys
+        ssh-keygen -lf diagnostics/ssh_authorized_keys
         sed -i '/^snapshot$/i /usr/bin/pstore_cdc_once.sh' openwrt/files/usr/bin/usb_console_debug.sh
         test "$(grep -Fxc '/usr/bin/pstore_cdc_once.sh' openwrt/files/usr/bin/usb_console_debug.sh)" -eq 1
 
@@ -459,6 +462,12 @@ jobs:
         require_rootfs_exec /bin/busybox
         if [ "${{ inputs.ramoops_diag }}" = 'true' ]; then
           require_rootfs_exec /usr/bin/pstore_cdc_once.sh
+          key_copy="$(mktemp)"
+          debugfs -R 'cat /etc/dropbear/authorized_keys' "$image_raw" 2>/dev/null > "$key_copy"
+          cmp "$GITHUB_WORKSPACE/diagnostics/ssh_authorized_keys" "$key_copy"
+          rm -f "$key_copy"
+          key_stat="$(debugfs -R 'stat /etc/dropbear/authorized_keys' "$image_raw" 2>&1)"
+          printf '%s\n' "$key_stat" | grep -Eq 'Mode:[[:space:]]+0?600([[:space:]]|$)'
           debugfs -R 'cat /usr/bin/usb_console_debug.sh' "$image_raw" 2>/dev/null | grep -Fx '/usr/bin/pstore_cdc_once.sh'
         fi
 
