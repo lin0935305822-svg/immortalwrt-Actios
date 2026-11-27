@@ -1,0 +1,18 @@
+--- a/kernel/panic.c
++++ b/kernel/panic.c
+@@ -372,6 +372,15 @@ void panic(const char *fmt, ...)
+ 	if (!_crash_kexec_post_notifiers)
+ 		__crash_kexec(NULL);
+ 
++	/* UFI003 diagnostic image only: let another CPU forward kmsg to CDC. */
++	pr_emerg("UFI003_DIAG_CAPTURE: keeping other CPUs running for 10000 ms\n");
++	/*
++	 * IRQs and preemption stay disabled on the panicking CPU. The
++	 * diagnostic rootfs pins the USB IRQ and its kmsg reader to CPU3.
++	 * This window intentionally delays normal panic shutdown only.
++	 */
++	mdelay(10000);
++
+ 	panic_other_cpus_shutdown(_crash_kexec_post_notifiers);
+ 
+ 	printk_legacy_allow_panic_sync();

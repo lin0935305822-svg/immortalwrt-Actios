@@ -178,6 +178,7 @@ jobs:
         sha256sum "$GITHUB_WORKSPACE/diagnostics/ufi003-ramoops-diagnostic.patch" > "$GITHUB_WORKSPACE/diagnostic-build-info/diagnostic-patch.sha256"
         git -C openwrt apply --check "$GITHUB_WORKSPACE/diagnostics/ufi003-ramoops-diagnostic.patch"
         git -C openwrt apply "$GITHUB_WORKSPACE/diagnostics/ufi003-ramoops-diagnostic.patch"
+        install -m 0644 diagnostics/ufi003-panic-capture-window.patch openwrt/target/linux/generic/hack-6.12/999-ufi003-panic-capture-window.patch
         grep -F 'DEVICE_DTS := msm8916-thwc-ufi003-ramoops' openwrt/target/linux/msm89xx/image/msm8916.mk
         grep -F 'ramoops@9e300000' openwrt/target/linux/msm89xx/dts/msm8916-thwc-ufi003-ramoops.dts
 
@@ -192,10 +193,12 @@ jobs:
       run: |
         set -eu
         install -m 0755 diagnostics/pstore_cdc_once.sh openwrt/files/usr/bin/pstore_cdc_once.sh
+        install -m 0755 diagnostics/panic_cdc_capture.sh openwrt/files/usr/bin/panic_cdc_capture.sh
         install -d -m 0700 openwrt/files/etc/dropbear
         install -m 0600 diagnostics/ssh_authorized_keys openwrt/files/etc/dropbear/authorized_keys
         ssh-keygen -lf diagnostics/ssh_authorized_keys
         sed -i '/^snapshot$/i /usr/bin/pstore_cdc_once.sh' openwrt/files/usr/bin/usb_console_debug.sh
+        sed -i '/^snapshot$/i /usr/bin/panic_cdc_capture.sh \&' openwrt/files/usr/bin/usb_console_debug.sh
         test "$(grep -Fxc '/usr/bin/pstore_cdc_once.sh' openwrt/files/usr/bin/usb_console_debug.sh)" -eq 1
 
     - name: Load custom feeds
@@ -407,6 +410,8 @@ jobs:
         test -s "$dtb" || { echo "::error::image-msm8916-thwc-ufi003-ramoops.dtb not found under build_dir"; exit 1; }
         test -s "$config" || { echo "::error::kernel .config not found under build_dir"; exit 1; }
         cp "$kernel" "$out/vmlinux"
+        strings "$kernel" | grep -F "UFI003_DIAG_CAPTURE: keeping other CPUs running for 10000 ms"
+        cp diagnostics/ufi003-panic-capture-window.patch "$out/ufi003-panic-capture-window.patch"
         cp "$dtb" "$out/msm8916-thwc-ufi003-ramoops.dtb"
         cp "$config" "$out/kernel.config"
         sha256sum "$out"/vmlinux "$out"/*.dtb "$out"/kernel.config > "$out/kernel-symbols.sha256"
@@ -462,6 +467,8 @@ jobs:
         require_rootfs_exec /bin/busybox
         if [ "${{ inputs.ramoops_diag }}" = 'true' ]; then
           require_rootfs_exec /usr/bin/pstore_cdc_once.sh
+          require_rootfs_exec /usr/bin/panic_cdc_capture.sh
+          require_rootfs_exec /usr/bin/taskset
           key_copy="$(mktemp)"
           debugfs -R 'cat /etc/dropbear/authorized_keys' "$image_raw" 2>/dev/null > "$key_copy"
           cmp "$GITHUB_WORKSPACE/diagnostics/ssh_authorized_keys" "$key_copy"
