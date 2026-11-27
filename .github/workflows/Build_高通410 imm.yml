@@ -179,6 +179,7 @@ jobs:
         git -C openwrt apply --check "$GITHUB_WORKSPACE/diagnostics/ufi003-ramoops-diagnostic.patch"
         git -C openwrt apply "$GITHUB_WORKSPACE/diagnostics/ufi003-ramoops-diagnostic.patch"
         install -m 0644 diagnostics/ufi003-panic-capture-window.patch openwrt/target/linux/generic/hack-6.12/999-ufi003-panic-capture-window.patch
+        install -m 0644 diagnostics/wcn36xx-scan-band-guard.patch openwrt/package/kernel/mac80211/patches/ath/996-wcn36xx-scan-band-guard.patch
         grep -F 'DEVICE_DTS := msm8916-thwc-ufi003-ramoops' openwrt/target/linux/msm89xx/image/msm8916.mk
         grep -F 'ramoops@9e300000' openwrt/target/linux/msm89xx/dts/msm8916-thwc-ufi003-ramoops.dts
 

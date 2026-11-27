@@ -1,0 +1,34 @@
+From: UFI003 diagnostics <dev@meter-weight.local>
+Subject: wifi: wcn36xx: validate the supported band for scan RX
+
+On a 2.4 GHz-only WCN3620 device, a scan buffer descriptor can enter the
+5 GHz channel mapping branch even though wiphy->bands[NL80211_BAND_5GHZ]
+is NULL. The subsequent survey update dereferences sband->channels in
+RX IRQ context, leading to a NULL pointer exception and panic.
+
+Only infer 5 GHz when that band is registered. Reject any remaining
+unsupported-band result before both the survey update and mac80211 RX.
+
+--- a/drivers/net/wireless/ath/wcn36xx/txrx.c
++++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
+@@ -367,7 +367,9 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
+ 		 */
+ 		u8 hwch = (bd->reserved0 << 4) + bd->rx_ch;
+ 
+-		if (bd->rf_band != 1 && hwch <= sizeof(ab_rx_ch_map) && hwch >= 1) {
++		/* Scan metadata cannot add a band that the radio does not support. */
++		if (wcn->hw->wiphy->bands[NL80211_BAND_5GHZ] &&
++		    bd->rf_band != 1 && hwch <= sizeof(ab_rx_ch_map) && hwch >= 1) {
+ 			status.band = NL80211_BAND_5GHZ;
+ 			status.freq = ieee80211_channel_to_frequency(ab_rx_ch_map[hwch - 1],
+ 								     status.band);
+@@ -380,6 +382,9 @@ int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
+ 		status.freq = WCN36XX_CENTER_FREQ(wcn);
+ 	}
+ 
++	if (!wcn->hw->wiphy->bands[status.band])
++		goto drop;
++
+ 	wcn36xx_update_survey(wcn, status.signal, get_snr(bd),
+ 			      status.band, status.freq);
+ 
