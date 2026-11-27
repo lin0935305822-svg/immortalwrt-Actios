@@ -31,6 +31,7 @@ require_text 'Apply UFI003 WCN36xx scan band fix'
 require_text 'Verify compiled UFI003 WCN36xx source'
 require_text 'scripts/apply_ufi003_wcn36xx_fix.sh'
 require_text '--prepared-source'
+require_text '/bin/sh "$GITHUB_WORKSPACE/scripts/verify_ufi003_taskset_image.sh" "$image_raw"'
 require_text 'TZ: Asia/Shanghai'
 require_text '/bin/sh ./scripts/run_ufi003_preflight.sh .'
 require_text '--control-root "$GITHUB_WORKSPACE"'
@@ -43,6 +44,7 @@ require_text 'FLASH_PACKAGE_SHA256'
 
 for script in \
     './scripts/verify_ufi003_workflow_policy.sh .' \
+    './scripts/test_ufi003_taskset_image.py' \
     './scripts/test_wcn36xx_scan_band_guard.sh .' \
     './scripts/verify_ufi003_config_consistency.sh config/ufi003.config' \
     './scripts/test_rfcomm_a30m_bluez_readiness.sh .' \

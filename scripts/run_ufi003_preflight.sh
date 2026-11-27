@@ -7,6 +7,7 @@ cd "$root"
 
 /bin/sh ./scripts/verify_ufi003_workflow_policy.sh .
 /bin/sh ./scripts/test_wcn36xx_scan_band_guard.sh .
+python3 ./scripts/test_ufi003_taskset_image.py
 /bin/sh ./scripts/verify_ufi003_config_consistency.sh config/ufi003.config
 /bin/sh ./scripts/test_ufi003_sta_profile.sh .
 /bin/sh ./scripts/test_sta_dhcp_recover.sh .

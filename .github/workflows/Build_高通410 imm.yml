@@ -479,7 +479,7 @@ jobs:
         if [ "${{ inputs.ramoops_diag }}" = 'true' ]; then
           require_rootfs_exec /usr/bin/pstore_cdc_once.sh
           require_rootfs_exec /usr/bin/panic_cdc_capture.sh
-          require_rootfs_exec /usr/bin/taskset
+          /bin/sh "$GITHUB_WORKSPACE/scripts/verify_ufi003_taskset_image.sh" "$image_raw"
           key_copy="$(mktemp)"
           debugfs -R 'cat /etc/dropbear/authorized_keys' "$image_raw" 2>/dev/null > "$key_copy"
           cmp "$GITHUB_WORKSPACE/diagnostics/ssh_authorized_keys" "$key_copy"
