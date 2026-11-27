@@ -46,3 +46,18 @@ and physical scan/STA/Bluetooth acceptance establish that result.
 
 Raw crash logs, module hashes and disassembly remain outside Git in the local
 diagnostic evidence directory.
+
+## Build integration follow-up
+
+The reviewed fix now lives in `patches/wcn36xx-scan-band-guard.patch` and is
+staged for every UFI003 workflow build, including builds without ramoops.
+The staging script rejects unreviewed backports versions/archive hashes and
+conflicting patches. Preflight reproduces the original userspace NULL fault
+from pinned upstream source and exercises the patched RX selection/survey.
+After compilation, CI requires the prepared driver source to match the
+reviewed patched fixture before accepting the image. The temporary 10-second
+panic capture patch is no longer installed; its files remain historical evidence.
+
+Firmware compilation, final image checks, and replacement physical acceptance
+(periodic scans, STA, hci0, bluetoothd, A30M pairing, SDP and RFCOMM) remain required.
+These source tests do not establish that device resets have stopped.

@@ -168,6 +168,11 @@ jobs:
         fi
         ln -sf /mnt/openwrt $GITHUB_WORKSPACE/openwrt
 
+    - name: Apply UFI003 WCN36xx scan band fix
+      if: ${{ inputs.profile == 'ufi003' }}
+      run: |
+        /bin/sh "$GITHUB_WORKSPACE/scripts/apply_ufi003_wcn36xx_fix.sh" "$GITHUB_WORKSPACE/openwrt"
+
     - name: Apply UFI003 ramoops diagnostic patch
       if: ${{ inputs.ramoops_diag == true }}
       run: |
@@ -178,8 +183,6 @@ jobs:
         sha256sum "$GITHUB_WORKSPACE/diagnostics/ufi003-ramoops-diagnostic.patch" > "$GITHUB_WORKSPACE/diagnostic-build-info/diagnostic-patch.sha256"
         git -C openwrt apply --check "$GITHUB_WORKSPACE/diagnostics/ufi003-ramoops-diagnostic.patch"
         git -C openwrt apply "$GITHUB_WORKSPACE/diagnostics/ufi003-ramoops-diagnostic.patch"
-        install -m 0644 diagnostics/ufi003-panic-capture-window.patch openwrt/target/linux/generic/hack-6.12/999-ufi003-panic-capture-window.patch
-        install -m 0644 diagnostics/wcn36xx-scan-band-guard.patch openwrt/package/kernel/mac80211/patches/ath/996-wcn36xx-scan-band-guard.patch
         grep -F 'DEVICE_DTS := msm8916-thwc-ufi003-ramoops' openwrt/target/linux/msm89xx/image/msm8916.mk
         grep -F 'ramoops@9e300000' openwrt/target/linux/msm89xx/dts/msm8916-thwc-ufi003-ramoops.dts
 
@@ -398,6 +401,15 @@ jobs:
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
 
+    - name: Verify compiled UFI003 WCN36xx source
+      if: inputs.profile == 'ufi003' && steps.compile.outputs.status == 'success'
+      run: |
+        set -eu
+        source="$(find openwrt/build_dir -type f -path '*/backports-6.18.26/drivers/net/wireless/ath/wcn36xx/txrx.c' -print)"
+        test -n "$source"
+        test "$(printf '%s\n' "$source" | wc -l)" -eq 1
+        python3 scripts/test_wcn36xx_scan_band_guard.py --root . --prepared-source "$source"
+
     - name: Preserve diagnostic kernel symbols and DTB
       if: inputs.ramoops_diag && steps.compile.outputs.status == 'success'
       run: |
@@ -411,8 +423,6 @@ jobs:
         test -s "$dtb" || { echo "::error::image-msm8916-thwc-ufi003-ramoops.dtb not found under build_dir"; exit 1; }
         test -s "$config" || { echo "::error::kernel .config not found under build_dir"; exit 1; }
         cp "$kernel" "$out/vmlinux"
-        strings "$kernel" | grep -F "UFI003_DIAG_CAPTURE: keeping other CPUs running for 10000 ms"
-        cp diagnostics/ufi003-panic-capture-window.patch "$out/ufi003-panic-capture-window.patch"
         cp "$dtb" "$out/msm8916-thwc-ufi003-ramoops.dtb"
         cp "$config" "$out/kernel.config"
         sha256sum "$out"/vmlinux "$out"/*.dtb "$out"/kernel.config > "$out/kernel-symbols.sha256"
