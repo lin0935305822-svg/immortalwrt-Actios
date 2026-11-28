@@ -14,6 +14,7 @@ python3 ./scripts/test_ufi003_taskset_image.py
 /bin/sh ./scripts/test_rfcomm_a30m_bluez_readiness.sh .
 /bin/sh ./scripts/test_ufi003_dropbear_startup.sh .
 /bin/sh ./scripts/test_obdclaw_local_control.sh .
+/bin/sh ./scripts/test_obdclaw_local_control_setup.sh .
 /bin/sh ./scripts/test_obdclaw_runner_auth.sh .
 /bin/sh ./scripts/test_obdclaw_runner_authority_install.sh .
 /bin/sh ./scripts/test_svci_ufi003_source_stage.sh .
